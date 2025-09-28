@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Enchanted Golden Carrot Price Calculator</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #0f172a; /* Deep blue for fast loading */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            color: #e2e8f0;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full max-w-lg">
+        <!-- Single Card -->
+        <!-- Card border remains orange -->
+        <div class="bg-gray-800 p-8 rounded-xl shadow-2xl w-full text-center border-2 border-orange-500/50 backdrop-blur-md bg-opacity-90">
+            <!-- Main header text remains orange -->
+            <h1 class="text-3xl font-bold mb-2 text-orange-400">Golden Carrot Price Calculator</h1>
+            <!-- Removed the explanatory text -->
+            <p class="mb-6 text-gray-400"></p> 
+
+            <!-- Loading/Error Status -->
+            <div id="status-message" class="text-lg font-semibold text-gray-400 animate-pulse">
+                Fetching data...
+            </div>
+            <div id="error-message" class="mt-4 p-3 bg-red-900/50 rounded-lg text-red-400 font-semibold hidden"></div>
+
+            <!-- Price and Profit Display -->
+            <div id="price-container" class="mt-4 space-y-6 hidden">
+                <div>
+                    <!-- Section header text changed to light blue -->
+                    <h2 class="text-2xl font-bold mb-2 text-blue-400">Crafting Cost</h2>
+                    <p class="text-3xl font-extrabold text-white" id="crafted-golden-carrot-price"></p>
+                    <p class="mt-1 text-sm text-gray-500">
+                        Calculated cost using Bazaar Instant Sell price of 128x Enchanted Carrots (<span id="enchanted-carrot-price"></span> Coins each) + 480 fixed coins.
+                    </p>
+                </div>
+                <div>
+                    <!-- Section header text changed to light blue -->
+                    <h2 class="text-2xl font-bold mb-2 text-blue-400">Instant Sell Price</h2>
+                    <p class="text-3xl font-extrabold text-white" id="buy-golden-carrot-price"></p>
+                    <p class="mt-1 text-sm text-gray-500">Based on the Bazaar instant buy value (your sell price)</p>
+                </div>
+                <div>
+                    <!-- Profit/Loss text changed to light blue and shortened -->
+                    <h2 class="text-2xl font-bold mb-2 text-blue-400">Profit/Loss</h2>
+                    <p class="text-3xl font-extrabold" id="profit-loss-amount"></p>
+                    <p class="mt-1 text-sm text-gray-500">A positive value means profit, a negative value is a loss. (Includes 1% Bazaar tax)</p>
+                </div>
+            </div>
+
+            <!-- The footer text was removed here -->
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // --- DOM Elements ---
+            const statusMessage = document.getElementById('status-message');
+            const priceContainer = document.getElementById('price-container');
+            const craftedGoldenCarrotPriceEl = document.getElementById('crafted-golden-carrot-price');
+            const enchantedCarrotPriceEl = document.getElementById('enchanted-carrot-price');
+            const buyGoldenCarrotPriceEl = document.getElementById('buy-golden-carrot-price');
+            const profitLossAmountEl = document.getElementById('profit-loss-amount');
+            const errorMessage = document.getElementById('error-message');
+            // Removed refresh button and timer elements
+
+            // --- Constants ---
+            const API_URL = 'https://api.hypixel.net/skyblock/bazaar';
+            const ENCHANTED_CARROT_ITEM = 'ENCHANTED_CARROT';
+            const ENCHANTED_GOLDEN_CARROT_ITEM = 'ENCHANTED_GOLDEN_CARROT';
+            const NUM_ENCHANTED_CARROTS_NEEDED = 128; 
+            const FIXED_COIN_FEE = 480; 
+            const TAX_RATE = 0.01; 
+            // Removed REFRESH_INTERVAL_SECONDS
+
+            // --- Utility Functions ---
+
+            /** Formats a number as a currency string with two decimal places. */
+            const formatPrice = (price) => {
+                return new Intl.NumberFormat('en-US', {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2
+                }).format(price);
+            };
+
+            /** Calculates and displays the profit/loss. */
+            const calculateProfit = (craftedPrice, buyPrice) => {
+                // Raw profit is the instant sell price minus the cost to craft
+                const rawProfit = buyPrice - craftedPrice; 
+                
+                // Tax is only applied to positive profit (bazaar flip tax)
+                const tax = Math.max(0, rawProfit) * TAX_RATE; 
+                const taxedProfit = rawProfit - tax;
+
+                profitLossAmountEl.textContent = `${formatPrice(taxedProfit)} Coins`;
+
+                // Change color based on profit or loss
+                if (taxedProfit > 0) {
+                    profitLossAmountEl.className = 'text-3xl font-extrabold text-green-400';
+                } else if (taxedProfit < 0) {
+                    profitLossAmountEl.className = 'text-3xl font-extrabold text-red-400';
+                } else {
+                    profitLossAmountEl.className = 'text-3xl font-extrabold text-white';
+                }
+            };
+            
+            /** * Makes an API call with exponential backoff for resilience against rate limits.
+             * @param {string} url - The API endpoint URL.
+             * @param {number} maxRetries - Maximum number of retries.
+             * @returns {Promise<any>} The parsed JSON response.
+             */
+            const makeApiCallWithRetry = async (url, maxRetries = 5) => {
+                for (let i = 0; i < maxRetries; i++) {
+                    try {
+                        const response = await fetch(url);
+                        if (response.ok) {
+                            return await response.json();
+                        } else if (response.status === 429) {
+                            throw new Error('Rate limit exceeded. Retrying...');
+                        } else {
+                            throw new Error(`HTTP Error: ${response.status}`);
+                        }
+                    } catch (error) {
+                        if (i === maxRetries - 1) {
+                            // Only console.error the error if all retries fail
+                            console.error(`Attempt ${i + 1} failed.`);
+                            throw new Error(`Failed to fetch data after ${maxRetries} retries.`);
+                        }
+                        // Exponential backoff delay: 2^i seconds
+                        const delay = Math.pow(2, i) * 1000;
+                        // Avoid logging retries as errors in the console per instructions
+                        await new Promise(resolve => setTimeout(resolve, delay));
+                    }
+                }
+            };
+
+            // --- Core Logic ---
+
+            /** Fetches data, calculates prices, and updates the UI. (One-time fetch) */
+            const fetchAndCalculatePrice = async () => {
+                // Show loading state
+                statusMessage.textContent = 'Fetching data...';
+                statusMessage.classList.remove('hidden');
+                statusMessage.classList.add('animate-pulse');
+                priceContainer.classList.add('hidden');
+                errorMessage.classList.add('hidden');
+
+                try {
+                    const data = await makeApiCallWithRetry(API_URL);
+
+                    if (!data.success) {
+                        throw new Error('API call was not successful or returned no data.');
+                    }
+                    
+                    let craftedPrice, buyPrice;
+
+                    // 1. Handle Crafted Price Calculation (Cost to make)
+                    const enchantedCarrotProduct = data.products[ENCHANTED_CARROT_ITEM];
+                    if (!enchantedCarrotProduct || !enchantedCarrotProduct.sell_summary || enchantedCarrotProduct.sell_summary.length === 0) {
+                        throw new Error(`Could not find instant sell price for ${ENCHANTED_CARROT_ITEM}.`);
+                    }
+                    const instantSellPrice = enchantedCarrotProduct.sell_summary[0].pricePerUnit;
+                    // Formula: (128x Enchanted Carrots @ Instant Sell Price) + Fixed Coin Fee
+                    craftedPrice = (instantSellPrice * NUM_ENCHANTED_CARROTS_NEEDED) + FIXED_COIN_FEE;
+                    
+                    craftedGoldenCarrotPriceEl.textContent = `${formatPrice(craftedPrice)} Coins`;
+                    enchantedCarrotPriceEl.textContent = formatPrice(instantSellPrice);
+
+                    // 2. Handle Instant Sell Price Calculation (Revenue)
+                    const enchantedGoldenCarrotProduct = data.products[ENCHANTED_GOLDEN_CARROT_ITEM];
+                    if (!enchantedGoldenCarrotProduct || !enchantedGoldenCarrotProduct.buy_summary || enchantedGoldenCarrotProduct.buy_summary.length === 0) {
+                        throw new Error(`Could not find instant buy price for ${ENCHANTED_GOLDEN_CARROT_ITEM}.`);
+                    }
+                    // Instant Buy Price is the price the user can Instant Sell for
+                    buyPrice = enchantedGoldenCarrotProduct.buy_summary[0].pricePerUnit; 
+                    buyGoldenCarrotPriceEl.textContent = `${formatPrice(buyPrice)} Coins`;
+
+                    // 3. Calculate Profit/Loss
+                    calculateProfit(craftedPrice, buyPrice);
+                    
+                    // Hide loading and show results
+                    priceContainer.classList.remove('hidden');
+                    statusMessage.classList.add('hidden');
+                    statusMessage.classList.remove('animate-pulse');
+                    
+                } catch (error) {
+                    // Display error message
+                    errorMessage.textContent = `Error fetching data: ${error.message}.`;
+                    errorMessage.classList.remove('hidden');
+                    statusMessage.classList.add('hidden');
+                }
+            };
+            
+            // --- Initialization ---
+
+            // Start the fetch process immediately on page load
+            fetchAndCalculatePrice();
+        });
+    </script>
+
+</body>
+</html>
