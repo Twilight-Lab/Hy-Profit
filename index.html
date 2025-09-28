@@ -1,1 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SkyBlock Flip Calculator</title>
+    <!-- Load Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Custom font import for a modern look */
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            /* Hide scrollbar for a cleaner look, while still allowing scrolling */
+            -ms-overflow-style: none;  /* IE and Edge */
+            scrollbar-width: none;  /* Firefox */
+        }
+        body::-webkit-scrollbar {
+            display: none;  /* Chrome, Safari, and Opera */
+        }
+        .card-shadow {
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.2), 0 4px 6px -2px rgba(0, 0, 0, 0.1);
+        }
+    </style>
+</head>
+<body class="bg-gray-900 text-white min-h-screen p-4 sm:p-8">
 
+    <div class="max-w-7xl mx-auto">
+
+        <!-- Header Section -->
+        <header class="text-center mb-8 py-8">
+            <h1 class="text-5xl sm:text-7xl font-extrabold text-cyan-400 tracking-tight">
+                Hy-Profits
+            </h1>
+            <p class="mt-4 text-xl text-gray-400 font-medium">
+                Maximize your profit margins by calculating costs for the highest-yield crafting flips.
+            </p>
+        </header>
+
+        <!-- Cards Grid - Updated to contain only two specific items -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-3xl mx-auto">
+
+            <!-- Card 1: Enchanted Golden Carrot -->
+            <a href="EnchantedGoldenCarrot.html" class="calculator-card group">
+                <div class="text-4xl mb-4 p-3 bg-orange-500/20 text-orange-400 rounded-xl inline-block transition-transform duration-300 group-hover:scale-110">
+                    🥕
+                </div>
+                <h2 class="text-2xl font-bold mb-2 text-orange-400">Enchanted Golden Carrot</h2>
+                <p class="text-gray-400">
+                    Calculate profit margins for crafting the Enchanted Golden Carrot from raw materials.
+                </p>
+            </a>
+
+            <!-- Card 2: Braided Griffin Feather -->
+            <a href="braidedGriffinFeathe.html" class="calculator-card group">
+                <div class="text-4xl mb-4 p-3 bg-cyan-500/20 text-cyan-400 rounded-xl inline-block transition-transform duration-300 group-hover:rotate-6">
+                    🪶
+                </div>
+                <h2 class="text-2xl font-bold mb-2 text-cyan-400">Braided Griffin Feather</h2>
+                <p class="text-gray-400">
+                    Determine the cheapest way to acquire and craft this specific Mythic accessory component.
+                </p>
+            </a>
+
+        </div>
+
+        <!-- Footer -->
+        <footer class="mt-16 pt-8 border-t border-gray-800 text-center text-gray-500">
+            <p>&copy; 2024 Flip Forge. Unofficial SkyBlock Fan Project. Prices are theoretical.</p>
+        </footer>
+
+    </div>
+
+    <script>
+        // JavaScript for card styling/interaction
+        document.addEventListener('DOMContentLoaded', () => {
+            const cards = document.querySelectorAll('.calculator-card');
+
+            // Apply base classes to all cards
+            cards.forEach(card => {
+                card.classList.add(
+                    'block', 'p-6', 'rounded-2xl', 'bg-gray-800', 'card-shadow',
+                    'hover:bg-gray-700', 'transition', 'duration-300', 'ease-in-out',
+                    'transform', 'hover:-translate-y-1', 'hover:ring-2', 'hover:ring-amber-500/70',
+                    'focus:outline-none', 'focus:ring-2', 'focus:ring-amber-500'
+                );
+            });
+        });
+    </script>
+</body>
+</html>
