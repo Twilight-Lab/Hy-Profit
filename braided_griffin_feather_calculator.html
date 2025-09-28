@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Braided Griffin Feather Crafting Cost</title>
+    <!-- Load Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Custom font import (Inter is modern and clean) */
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #0f172a; /* Dark blue background */
+        }
+    </style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-4">
+
+    <div id="app" class="w-full max-w-xl bg-gray-800 p-8 md:p-10 rounded-xl shadow-2xl border border-gray-700">
+        <!-- Changed title color to teal -->
+        <h1 class="text-3xl font-extrabold text-teal-300 mb-6 text-center">
+            Braided Griffin Feather Crafting Analysis
+        </h1>
+
+        <!-- Ingredients List Section -->
+        <div class="mb-8">
+            <h2 class="text-xl font-semibold text-gray-200 mb-4 border-b border-gray-700 pb-2">Required Ingredients</h2>
+            <div class="space-y-3 text-gray-300">
+                
+                <!-- Griffin Feather -->
+                <div class="flex justify-between items-center bg-gray-700 p-3 rounded-lg">
+                    <span class="flex flex-col">
+                        <span>Griffin Feather</span>
+                        <!-- Placeholder for individual price -->
+                        <span id="griffin-feather-price" class="text-xs text-gray-400 italic">Loading price...</span>
+                    </span>
+                    <!-- Changed quantity color to teal -->
+                    <span class="font-mono text-lg text-teal-500">x 160</span>
+                </div>
+                
+                <!-- Soul String -->
+                <div class="flex justify-between items-center bg-gray-700 p-3 rounded-lg">
+                    <span class="flex flex-col">
+                        <span>Soul String</span>
+                        <!-- Placeholder for individual price -->
+                        <span id="soul-string-price" class="text-xs text-gray-400 italic">Loading price...</span>
+                    </span>
+                    <!-- Changed quantity color to teal -->
+                    <span class="font-mono text-lg text-teal-500">x 256</span>
+                </div>
+                
+            </div>
+        </div>
+
+        <!-- Result/Loading Section -->
+        <div id="status-display" class="text-center">
+            <!-- Changed spinner color to teal -->
+            <div id="loading-message" class="flex items-center justify-center space-x-3">
+                <svg class="animate-spin h-5 w-5 text-teal-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                <span class="text-lg text-gray-400">Fetching live Bazaar data...</span>
+            </div>
+
+            <div id="result-display" class="hidden mt-6">
+                <h2 class="text-2xl font-bold text-gray-200 mb-4 border-b border-gray-700 pb-2">Calculation Results</h2>
+        
+                <div class="space-y-4">
+                    <!-- Crafting Cost -->
+                    <div class="bg-gray-700 p-4 rounded-lg flex justify-between items-center">
+                        <span id="crafting-cost-label" class="text-gray-300 font-medium">Crafting Cost (Ingredient Insta-Buy Price):</span>
+                        <!-- Changed total cost color to teal -->
+                        <span id="total-crafting-cost" class="text-2xl font-extrabold text-teal-400"></span>
+                    </div>
+
+                    <!-- Product Potential Sale Price -->
+                    <div class="bg-gray-700 p-4 rounded-lg flex justify-between items-center">
+                        <span id="product-insta-sell-label" class="text-gray-300 font-medium">Product Potential Sale Price (Highest Sell Offer):</span>
+                        <!-- Changed product sale color to cyan for distinction -->
+                        <span id="product-insta-sell" class="text-2xl font-extrabold text-cyan-400"></span>
+                    </div>
+
+                    <!-- Profit/Loss - Changed border accent to teal -->
+                    <div class="bg-gray-600 p-4 rounded-lg flex justify-between items-center border-l-4 border-teal-500">
+                        <span id="profit-loss-label" class="text-white font-bold text-xl">PROFIT / LOSS:</span>
+                        <span id="profit-loss-value" class="text-3xl font-extrabold"></span>
+                    </div>
+                </div>
+
+                <p class="text-gray-500 text-xs mt-4">Calculated by: (Product Potential Sale Price) - (Ingredient Insta-Buy Cost)</p>
+            </div>
+
+            <div id="error-message" class="hidden bg-red-800 p-4 rounded-lg mt-6">
+                <p class="text-red-200 font-medium">Error:</p>
+                <p id="error-text" class="text-red-300 text-sm"></p>
+            </div>
+        </div>
+    </div>
+
+    <script type="text/javascript">
+        // Hypixel SkyBlock Bazaar API URL
+        const BAZAAR_API_URL = 'https://api.hypixel.net/skyblock/bazaar';
+
+        // Ingredients and quantities required for 1 Braided Griffin Feather
+        const INGREDIENTS = {
+            'GRIFFIN_FEATHER': 160,
+            'SOUL_STRING': 256
+        };
+        
+        // The final product ID
+        const PRODUCT_ID = 'BRAIDED_GRIFFIN_FEATHER';
+
+        // DOM elements
+        const loadingMessage = document.getElementById('loading-message');
+        const resultDisplay = document.getElementById('result-display');
+        
+        const totalCraftingCostElement = document.getElementById('total-crafting-cost');
+        const productInstaSellElement = document.getElementById('product-insta-sell');
+        const profitLossValueElement = document.getElementById('profit-loss-value');
+        
+        const errorMessage = document.getElementById('error-message');
+        const errorTextElement = document.getElementById('error-text');
+
+        // Helper function to format coins with commas and optional sign
+        const formatCoins = (coins, showSign = true) => {
+            const sign = showSign && coins >= 0 ? '+' : ''; 
+            return sign + coins.toLocaleString(undefined, {
+                minimumFractionDigits: 0,
+                maximumFractionDigits: 2
+            }) + ' Coins';
+        };
+
+        // Main function to fetch data and calculate cost
+        async function calculateCost() {
+            // 1. Reset state
+            loadingMessage.classList.remove('hidden');
+            resultDisplay.classList.add('hidden');
+            errorMessage.classList.add('hidden');
+
+            try {
+                // 2. Fetch data from the Hypixel API with retry logic
+                const MAX_RETRIES = 3;
+                let data = null;
+
+                for (let i = 0; i < MAX_RETRIES; i++) {
+                    try {
+                        const response = await fetch(BAZAAR_API_URL);
+                        data = await response.json();
+                        if (data.success) break;
+                        if (i === MAX_RETRIES - 1) throw new Error(data.cause || 'API returned an unsuccessful status after multiple retries.');
+                    } catch (fetchError) {
+                        console.warn(`Fetch attempt ${i + 1} failed, retrying...`);
+                        if (i === MAX_RETRIES - 1) throw fetchError;
+                    }
+                    // Exponential backoff
+                    await new Promise(resolve => setTimeout(resolve, Math.pow(2, i) * 1000)); 
+                }
+                
+                // 3. Calculate crafting cost (Cost of ingredients using Insta-Buy price / lowest Sell Order price)
+                let totalCraftingCost = 0;
+
+                for (const [itemId, quantity] of Object.entries(INGREDIENTS)) {
+                    const product = data.products[itemId];
+
+                    if (!product || !product.quick_status || !product.quick_status.sellPrice) {
+                        throw new Error(`Could not find live Insta-Buy price (Lowest Sell Offer) for ${itemId}. (Is Mayor Diana active or is the item disabled?)`);
+                    }
+
+                    // Use sellPrice (the lowest Sell Offer price, which is what you pay to Insta-Buy) for ingredient cost
+                    const sellPrice = product.quick_status.sellPrice;
+                    const itemCost = sellPrice * quantity;
+                    totalCraftingCost += itemCost;
+                    
+                    // Display the single unit Insta-Buy price next to the item name
+                    const priceElementId = itemId.toLowerCase().replace(/_/g, '-') + '-price';
+                    const priceElement = document.getElementById(priceElementId);
+                    if (priceElement) {
+                        priceElement.textContent = `Insta-Buy: ${formatCoins(sellPrice, false)}`;
+                    }
+                }
+
+                // 4. Get the Sell Order price (Buy Price) of the crafted product
+                const finishedProduct = data.products[PRODUCT_ID];
+                // Using quick_status.buyPrice (Highest Buy Offer/Sell Order Price)
+                if (!finishedProduct || !finishedProduct.quick_status || !finishedProduct.quick_status.buyPrice) {
+                    throw new Error(`Could not find live Potential Sale Price (Highest Sell Offer Price) for ${PRODUCT_ID}.`);
+                }
+
+                // Use buyPrice (the highest current Buy Offer price, which is what you get for a Sell Order) for product value
+                const productBuyOfferPrice = finishedProduct.quick_status.buyPrice;
+
+                // 5. Calculate Profit/Loss
+                const profitLoss = productBuyOfferPrice - totalCraftingCost;
+
+                // 6. Display the results
+                totalCraftingCostElement.textContent = formatCoins(totalCraftingCost, false);
+                productInstaSellElement.textContent = formatCoins(productBuyOfferPrice, false); // Reuse DOM element
+                
+                profitLossValueElement.textContent = formatCoins(profitLoss, true);
+                
+                // Set color for profit/loss, using teal for zero profit/loss
+                profitLossValueElement.classList.remove('text-red-400', 'text-green-400', 'text-yellow-400');
+                if (profitLoss > 0) {
+                    profitLossValueElement.classList.add('text-green-400');
+                } else if (profitLoss < 0) {
+                    profitLossValueElement.classList.add('text-red-400');
+                } else {
+                    // Changed zero profit/loss color to teal
+                    profitLossValueElement.classList.add('text-teal-400');
+                }
+
+                // Ensure labels are set correctly
+                document.getElementById('crafting-cost-label').textContent = 'Crafting Cost (Ingredient Insta-Buy Price):';
+                document.getElementById('product-insta-sell-label').textContent = 'Product Potential Sale Price (Highest Sell Offer):';
+                document.querySelector('#result-display p:last-child').textContent = 'Calculated by: (Product Potential Sale Price) - (Ingredient Insta-Buy Cost)';
+
+
+                loadingMessage.classList.add('hidden');
+                resultDisplay.classList.remove('hidden');
+
+            } catch (error) {
+                // 7. Handle errors
+                console.error("Calculation failed:", error);
+                loadingMessage.classList.add('hidden');
+                errorTextElement.textContent = error.message || 'An unknown error occurred while fetching data.';
+                errorMessage.classList.remove('hidden');
+            }
+        }
+
+        // Run the calculation when the page loads
+        window.onload = calculateCost;
+    </script>
+</body>
+</html>
