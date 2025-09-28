@@ -18,9 +18,9 @@
 <body class="min-h-screen flex items-center justify-center p-4">
 
     <div id="app" class="w-full max-w-xl bg-gray-800 p-8 md:p-10 rounded-xl shadow-2xl border border-gray-700">
-        <!-- Changed title color to teal -->
+        <!-- Title remains teal for accent -->
         <h1 class="text-3xl font-extrabold text-teal-300 mb-6 text-center">
-            Braided Griffin Feather Crafting Analysis
+            Braided Griffin Feather Crafting Calculator
         </h1>
 
         <!-- Ingredients List Section -->
@@ -32,22 +32,22 @@
                 <div class="flex justify-between items-center bg-gray-700 p-3 rounded-lg">
                     <span class="flex flex-col">
                         <span>Griffin Feather</span>
-                        <!-- Placeholder for individual price -->
-                        <span id="griffin-feather-price" class="text-xs text-gray-400 italic">Loading price...</span>
+                        <!-- CHANGED: Individual price color to white -->
+                        <span id="griffin-feather-price" class="text-xs text-white italic">Loading price...</span>
                     </span>
-                    <!-- Changed quantity color to teal -->
-                    <span class="font-mono text-lg text-teal-500">x 160</span>
+                    <!-- CHANGED: Quantity color to white for consistency -->
+                    <span class="font-mono text-lg text-white">x 160</span>
                 </div>
                 
                 <!-- Soul String -->
                 <div class="flex justify-between items-center bg-gray-700 p-3 rounded-lg">
                     <span class="flex flex-col">
                         <span>Soul String</span>
-                        <!-- Placeholder for individual price -->
-                        <span id="soul-string-price" class="text-xs text-gray-400 italic">Loading price...</span>
+                        <!-- CHANGED: Individual price color to white -->
+                        <span id="soul-string-price" class="text-xs text-white italic">Loading price...</span>
                     </span>
-                    <!-- Changed quantity color to teal -->
-                    <span class="font-mono text-lg text-teal-500">x 256</span>
+                    <!-- CHANGED: Quantity color to white for consistency -->
+                    <span class="font-mono text-lg text-white">x 256</span>
                 </div>
                 
             </div>
@@ -55,7 +55,7 @@
 
         <!-- Result/Loading Section -->
         <div id="status-display" class="text-center">
-            <!-- Changed spinner color to teal -->
+            <!-- Spinner changed to teal -->
             <div id="loading-message" class="flex items-center justify-center space-x-3">
                 <svg class="animate-spin h-5 w-5 text-teal-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                     <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
@@ -71,25 +71,25 @@
                     <!-- Crafting Cost -->
                     <div class="bg-gray-700 p-4 rounded-lg flex justify-between items-center">
                         <span id="crafting-cost-label" class="text-gray-300 font-medium">Crafting Cost (Ingredient Insta-Buy Price):</span>
-                        <!-- Changed total cost color to teal -->
+                        <!-- Total cost changed to teal -->
                         <span id="total-crafting-cost" class="text-2xl font-extrabold text-teal-400"></span>
                     </div>
 
                     <!-- Product Potential Sale Price -->
                     <div class="bg-gray-700 p-4 rounded-lg flex justify-between items-center">
                         <span id="product-insta-sell-label" class="text-gray-300 font-medium">Product Potential Sale Price (Highest Sell Offer):</span>
-                        <!-- Changed product sale color to cyan for distinction -->
+                        <!-- Sale price changed to cyan for distinction -->
                         <span id="product-insta-sell" class="text-2xl font-extrabold text-cyan-400"></span>
                     </div>
 
-                    <!-- Profit/Loss - Changed border accent to teal -->
+                    <!-- Profit/Loss - Border accent changed to teal -->
                     <div class="bg-gray-600 p-4 rounded-lg flex justify-between items-center border-l-4 border-teal-500">
-                        <span id="profit-loss-label" class="text-white font-bold text-xl">PROFIT / LOSS:</span>
+                        <span id="profit-loss-label" class="text-white font-bold text-xl">PROFIT / LOSS (After 1% Tax):</span>
                         <span id="profit-loss-value" class="text-3xl font-extrabold"></span>
                     </div>
                 </div>
 
-                <p class="text-gray-500 text-xs mt-4">Calculated by: (Product Potential Sale Price) - (Ingredient Insta-Buy Cost)</p>
+                <!-- Removed calculation formula text here -->
             </div>
 
             <div id="error-message" class="hidden bg-red-800 p-4 rounded-lg mt-6">
@@ -111,6 +111,9 @@
         
         // The final product ID
         const PRODUCT_ID = 'BRAIDED_GRIFFIN_FEATHER';
+
+        // Bazaar tax rate for Sell Offers
+        const BAZAAR_TAX_RATE = 0.01; // 1%
 
         // DOM elements
         const loadingMessage = document.getElementById('loading-message');
@@ -177,6 +180,7 @@
                     const priceElementId = itemId.toLowerCase().replace(/_/g, '-') + '-price';
                     const priceElement = document.getElementById(priceElementId);
                     if (priceElement) {
+                        // The color is now controlled by the text-white class in the HTML
                         priceElement.textContent = `Insta-Buy: ${formatCoins(sellPrice, false)}`;
                     }
                 }
@@ -190,13 +194,15 @@
 
                 // Use buyPrice (the highest current Buy Offer price, which is what you get for a Sell Order) for product value
                 const productBuyOfferPrice = finishedProduct.quick_status.buyPrice;
-
-                // 5. Calculate Profit/Loss
-                const profitLoss = productBuyOfferPrice - totalCraftingCost;
+                
+                // 5. Calculate Profit/Loss (Adjusting for 1% Bazaar tax on sale)
+                const productValueAfterTax = productBuyOfferPrice * (1 - BAZAAR_TAX_RATE);
+                const profitLoss = productValueAfterTax - totalCraftingCost;
 
                 // 6. Display the results
                 totalCraftingCostElement.textContent = formatCoins(totalCraftingCost, false);
-                productInstaSellElement.textContent = formatCoins(productBuyOfferPrice, false); // Reuse DOM element
+                // We display the *pre-tax* price for clarity in the second row
+                productInstaSellElement.textContent = formatCoins(productBuyOfferPrice, false); 
                 
                 profitLossValueElement.textContent = formatCoins(profitLoss, true);
                 
@@ -207,15 +213,13 @@
                 } else if (profitLoss < 0) {
                     profitLossValueElement.classList.add('text-red-400');
                 } else {
-                    // Changed zero profit/loss color to teal
+                    // Reverted zero profit/loss color to teal
                     profitLossValueElement.classList.add('text-teal-400');
                 }
 
                 // Ensure labels are set correctly
                 document.getElementById('crafting-cost-label').textContent = 'Crafting Cost (Ingredient Insta-Buy Price):';
                 document.getElementById('product-insta-sell-label').textContent = 'Product Potential Sale Price (Highest Sell Offer):';
-                document.querySelector('#result-display p:last-child').textContent = 'Calculated by: (Product Potential Sale Price) - (Ingredient Insta-Buy Cost)';
-
 
                 loadingMessage.classList.add('hidden');
                 resultDisplay.classList.remove('hidden');
