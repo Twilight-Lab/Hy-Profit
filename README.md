@@ -5,20 +5,6 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/status-active-brightgreen?style=for-the-badge" />
-  <img src="https://img.shields.io/badge/made%20with-Python-blue?style=for-the-badge" />
-  <img src="https://img.shields.io/badge/website-live-success?style=for-the-badge" />
-</p>
-
----
-
-<h1 align="center">💰 Hy-Profit</h1>
-
-<p align="center">
-  <b>A powerful Hypixel SkyBlock price checker to help you find the most profitable trades and stay ahead of the market!</b>
-</p>
-
-<p align="center">
   <a href="https://twilight-lab.github.io/Hy-Profit/">
     <img src="https://img.shields.io/badge/status-active-brightgreen?style=for-the-badge" />
   </a>
