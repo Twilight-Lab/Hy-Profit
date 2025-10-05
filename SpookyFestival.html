@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spooky Festival Flips Calculator</title>
+    <!-- Load Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Custom Tailwind Configuration -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        'sky-dark': '#2a2e43',
+                        'sky-light': '#4f566e',
+                        'accent-green': '#10b981',
+                        'accent-purple': '#8b5cf6',
+                        'accent-red': '#ef4444',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            background-color: #1f2937; /* Dark background */
+            font-family: 'Inter', sans-serif;
+        }
+        .card {
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            transition: transform 0.2s;
+        }
+        .card:hover {
+            transform: translateY(-3px);
+        }
+        /* Loading animation style, using accent-purple */
+        .loading-animation {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #8b5cf6; /* Accent Purple for spooky theme */
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        /* FIX: Explicitly include dynamic classes so Tailwind CDN compiler can detect them */
+        .border-accent-green, .border-accent-purple, .border-accent-red {}
+    </style>
+</head>
+<body class="p-4 md:p-8 min-h-screen text-gray-100">
+
+    <header class="text-center mb-12">
+        <h1 class="text-4xl md:text-5xl font-extrabold text-white mb-2">
+            Spooky Festival Flips Calculator
+        </h1>
+        <p class="text-xl text-gray-400">
+            Optimizing margins during the Spooky Festival.
+        </p>
+    </header>
+    
+    <!-- LOADING STATE ELEMENT - Now outside the content container -->
+    <div id="loading" class="text-center p-8 max-w-6xl mx-auto">
+        <div class="flex justify-center items-center space-x-3">
+            <div class="loading-animation"></div>
+            <p class="text-lg text-gray-400">Fetching latest Bazaar data...</p>
+        </div>
+    </div>
+
+    <!-- MAIN CONTENT CONTAINER - Initially hidden -->
+    <div id="price-container" class="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-6xl mx-auto hidden">
+        <!-- Content will be injected here -->
+    </div>
+
+    <footer class="text-center mt-12 text-gray-500 text-sm">
+        <p>Data provided by the Hypixel API. Prices are in SkyBlock Coins (Coins).</p>
+    </footer>
+
+    <script type="text/javascript">
+        // Item configuration: Display Name and Hypixel API Product ID
+        const ITEMS_TO_TRACK = [
+            { name: "Green Candy", id: "GREEN_CANDY", color: "accent-green", icon: "🍬" },
+            { name: "Purple Candy", id: "PURPLE_CANDY", color: "accent-purple", icon: "🍭" },
+            { name: "Bat Firework", id: "BAT_FIREWORK", color: "accent-red", icon: "🎆" },
+        ];
+
+        const API_URL = "https://api.hypixel.net/skyblock/bazaar";
+        const container = document.getElementById('price-container');
+        const loadingElement = document.getElementById('loading');
+
+        // Helper function to format large numbers with commas
+        const formatNumber = (num) => {
+            if (num === null || isNaN(num)) return 'N/A'; // Check for NaN as well
+            // Use Math.abs for profit display to ensure proper sign formatting, but parseFloat for calculation
+            return parseFloat(num).toFixed(1).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+        };
+
+        // Helper function for coloring margin text based on value
+        const getMarginClass = (margin) => {
+            if (margin === null || isNaN(margin)) return 'text-gray-400';
+            if (margin > 0.01) return 'text-accent-green';
+            if (margin < -0.01) return 'text-accent-red';
+            return 'text-gray-400';
+        };
+
+        // Function to create an HTML card for a single item
+        const createItemCard = (item, productData) => {
+            // Check for necessary product data and price arrays
+            if (!productData || !productData.sell_summary?.length || !productData.buy_summary?.length) {
+                return `
+                    <div class="card bg-gray-800 rounded-xl p-6 border-t-4 border-${item.color}">
+                        <h2 class="text-2xl font-bold mb-4 flex items-center">
+                            ${item.icon} <span class="ml-2">${item.name}</span>
+                        </h2>
+                        <p class="text-red-400 font-semibold">Data Not Available</p>
+                        <p class="text-sm text-gray-400 mt-1">Could not fetch valid price data for this item.</p>
+                    </div>
+                `;
+            }
+            
+            // Insta-Buy Price: Lowest price to buy instantly (from sell_summary[0])
+            const instaBuyPrice = productData.sell_summary[0]?.pricePerUnit || null;
+            // Insta-Sell Price: Highest price to sell instantly (from buy_summary[0])
+            const instaSellPrice = productData.buy_summary[0]?.pricePerUnit || null;
+
+            // Calculate Profit
+            let profit = null;
+            let profitTextClass = 'text-gray-300'; // Initial default
+            
+            if (instaBuyPrice !== null && instaSellPrice !== null) {
+                // Margin = Sell Price - Buy Price
+                profit = instaSellPrice - instaBuyPrice;
+                profitTextClass = getMarginClass(profit);
+            }
+            
+            return `
+                <div class="card bg-gray-800 rounded-xl p-6 border-t-4 border-${item.color}">
+                    <h2 class="text-2xl font-bold mb-4 flex items-center text-white">
+                        <span class="text-3xl mr-2">${item.icon}</span> 
+                        ${item.name}
+                    </h2>
+                    
+                    <div class="space-y-3">
+                        <!-- Insta-Buy Price -->
+                        <div class="flex justify-between items-center bg-sky-light p-3 rounded-lg">
+                            <span class="font-medium text-gray-300">Buy order price:</span>
+                            <span class="text-lg font-extrabold text-accent-green">
+                                ${formatNumber(instaBuyPrice)} Coins
+                            </span>
+                        </div>
+
+                        <!-- Insta-Sell Price -->
+                        <div class="flex justify-between items-center bg-sky-light p-3 rounded-lg">
+                            <span class="font-medium text-gray-300">Sell order price:</span>
+                            <span class="text-lg font-extrabold text-cyan-400">
+                                ${formatNumber(instaSellPrice)} Coins
+                            </span>
+                        </div>
+                        
+                        <!-- Margin -->
+                        <div class="flex justify-between items-center bg-sky-dark p-3 rounded-lg border border-sky-light mt-3">
+                            <span class="font-bold text-gray-100">Margin:</span>
+                            <span class="text-lg font-extrabold ${profitTextClass}">
+                                ${profit !== null ? (profit > 0 ? '+' : '') : ''}${formatNumber(profit)} Coins
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            `;
+        };
+
+        // Function to create the Bat Firework crafting cost card
+        const createCraftingCard = (greenCandyProductData, batFireworkInstaSellPrice) => {
+            const RECIPE_COUNT = 100;
+            const batFireworkName = "Bat Firework Crafting Cost";
+            const color = "accent-purple"; 
+
+            // Check for valid price data for Green Candy
+            if (!greenCandyProductData || !greenCandyProductData.sell_summary?.length || !greenCandyProductData.buy_summary?.length) {
+                return `
+                    <div class="card bg-gray-800 rounded-xl p-6 border-t-4 border-${color} md:col-span-3">
+                        <h2 class="text-2xl font-bold mb-4 flex items-center text-white">
+                            <span class="text-3xl mr-2">🔨</span> 
+                            ${batFireworkName}
+                        </h2>
+                        <p class="text-red-400 font-semibold">Crafting Data Unavailable</p>
+                        <p class="text-sm text-gray-400 mt-1">Cannot calculate cost without Green Candy prices.</p>
+                    </div>
+                `;
+            }
+
+            // Green Candy Insta-Buy Price: The lowest price to buy a single Green Candy
+            const greenCandyInstaBuyPrice = greenCandyProductData.sell_summary[0]?.pricePerUnit || 0;
+            // Green Candy Insta-Sell Price: The highest price to sell a single Green Candy
+            const greenCandyInstaSellPrice = greenCandyProductData.buy_summary[0]?.pricePerUnit || 0;
+
+            // --- Component Cost Calculations ---
+            
+            // Craft Price 1 (Display as "Using Insta Buy"): Calculated using the component's Insta-Sell Price (Opportunity Cost)
+            const craftPriceInstaBuyComponents = greenCandyInstaSellPrice * RECIPE_COUNT;
+            
+            // Craft Price 2 (Display as "Using Buy Order"): Calculated using the component's Insta-Buy Price (Instant Acquisition Cost)
+            const craftPriceInstaSellComponents = greenCandyInstaBuyPrice * RECIPE_COUNT;
+            
+            
+            // --- Margin Calculations (Insta-Sell Price of Bat Firework - Craft Price) ---
+            
+            // Margin 1 (For "Using Insta Buy"): Bat Firework Insta Sell - Craft Price (100x Insta-Sell Price of component)
+            const marginInstaBuyComponents = batFireworkInstaSellPrice !== null 
+                ? batFireworkInstaSellPrice - craftPriceInstaBuyComponents
+                : null;
+            const margin1TextClass = getMarginClass(marginInstaBuyComponents);
+
+            // Margin 2 (For "Using Buy Order"): Bat Firework Insta Sell - Craft Price (100x Insta-Buy Price of component)
+            const marginBuyOrderComponents = batFireworkInstaSellPrice !== null 
+                ? batFireworkInstaSellPrice - craftPriceInstaSellComponents
+                : null;
+            const margin2TextClass = getMarginClass(marginBuyOrderComponents);
+
+
+            return `
+                <div class="card bg-gray-800 rounded-xl p-6 border-t-4 border-${color} md:col-span-3">
+                    <h2 class="text-2xl font-bold mb-4 flex items-center text-white">
+                        <span class="text-3xl mr-2">🔨</span> 
+                        ${batFireworkName}
+                    </h2>
+                    
+                    <p class="text-gray-400 mb-6 text-sm">
+                        Calculated cost to craft 1 Bat Firework using <span class="text-accent-green font-bold">100x Green Candy</span>.
+                    </p>
+
+                    <h3 class="text-xl font-semibold mb-3 text-gray-200">Component Costs</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                        <!-- Craft Price (Using Insta Buy - uses Insta-Sell Price of component) -->
+                        <div class="flex justify-between items-center bg-sky-light p-3 rounded-lg">
+                            <span class="font-medium text-gray-300">Using Insta Buy:</span>
+                            <span class="text-lg font-extrabold text-accent-red">
+                                ${formatNumber(craftPriceInstaBuyComponents)} Coins
+                            </span>
+                        </div>
+
+                        <!-- Craft Price (Using Buy Order - uses Insta-Buy Price of component) -->
+                        <div class="flex justify-between items-center bg-sky-light p-3 rounded-lg">
+                            <span class="font-medium text-gray-300">Using Buy Order:</span>
+                            <span class="text-lg font-extrabold text-accent-green">
+                                ${formatNumber(craftPriceInstaSellComponents)} Coins
+                            </span>
+                        </div>
+                    </div>
+                    
+                    <h3 class="text-xl font-semibold mb-3 text-gray-200 border-t border-sky-light pt-4">Profit Margins (vs. Bat Firework Insta-Sell Price)</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <!-- Margin 1: Insta Sell Price - Cost (Using Insta Buy Components) -->
+                        <div class="flex justify-between items-center bg-sky-dark p-3 rounded-lg border border-sky-light">
+                            <span class="font-bold text-gray-100">Margin (vs. Insta Buy):</span>
+                            <span class="text-lg font-extrabold ${margin1TextClass}">
+                                ${marginInstaBuyComponents !== null ? (marginInstaBuyComponents > 0 ? '+' : '') : ''}${formatNumber(marginInstaBuyComponents)} Coins
+                            </span>
+                        </div>
+                        
+                        <!-- Margin 2: Insta Sell Price - Cost (Using Buy Order Components) -->
+                        <div class="flex justify-between items-center bg-sky-dark p-3 rounded-lg border border-sky-light">
+                            <span class="font-bold text-gray-100">Margin (vs. Buy Order):</span>
+                            <span class="text-lg font-extrabold ${margin2TextClass}">
+                                ${marginBuyOrderComponents !== null ? (marginBuyOrderComponents > 0 ? '+' : '') : ''}${formatNumber(marginBuyOrderComponents)} Coins
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            `;
+        };
+        
+        // Function to create the Bat Firework Usage card
+        const createUsageCard = (purpleCandyInstaBuyPrice, purpleCandyInstaSellPrice) => {
+            const name = "Bat Firework Drop Value"; // Changed from "Bat Firework Use"
+            const color = "accent-red"; // Use red for the Bat Firework item color
+
+            const drops = [5, 10, 15, 20, 25, 64];
+            const chances = ["34.48%", "34.48%", "17.24%", "8.62%", "4.31%", "0.86%"];
+            
+            // Average drop of Purple Candy per use
+            const avgDrop = 11.11;
+            let avgWorthInstaSell = null;
+            let avgWorthSellOrder = null;
+            
+            let tableRows = '';
+            
+            // Check if candy prices are available
+            if (purpleCandyInstaBuyPrice === null || purpleCandyInstaSellPrice === null) {
+                tableRows = `
+                    <tr>
+                        <td colspan="4" class="py-3 text-center text-red-400 font-semibold">
+                            Purple Candy prices not available for calculation.
+                        </td>
+                    </tr>
+                `;
+            } else {
+                drops.forEach((drop, index) => {
+                    const chance = chances[index];
+
+                    // Calculation based on user request:
+                    // 1. Worth (Insta Sell Price) = Drops * Buy order price (purpleCandyInstaBuyPrice)
+                    const worthInstaSell = drop * purpleCandyInstaBuyPrice;
+                    
+                    // 2. Worth (Sell Order Price) = Drops * Sell order price (purpleCandyInstaSellPrice)
+                    const worthSellOrder = drop * purpleCandyInstaSellPrice;
+
+                    tableRows += `
+                        <tr class="hover:bg-sky-light/50 transition duration-150 ${index % 2 === 0 ? 'bg-sky-light/30' : 'bg-sky-light/10'}">
+                            <td class="p-3 text-center font-mono text-gray-200">${drop}</td>
+                            <td class="p-3 text-center text-accent-purple font-semibold">${chance}</td>
+                            <td class="p-3 text-right font-extrabold text-accent-green">${formatNumber(worthInstaSell)}</td>
+                            <td class="p-3 text-right font-extrabold text-cyan-400">${formatNumber(worthSellOrder)}</td>
+                        </tr>
+                    `;
+                });
+
+                // Calculate Average Worth
+                avgWorthInstaSell = avgDrop * purpleCandyInstaBuyPrice;
+                avgWorthSellOrder = avgDrop * purpleCandyInstaSellPrice;
+            }
+
+            // Generate HTML for the average summary block
+            let avgSummaryHtml = '';
+            if (avgWorthInstaSell !== null && avgWorthSellOrder !== null) {
+                // ICON CHANGED: 📊 (bar chart) changed to 💰 (money bag)
+                avgSummaryHtml = `
+                    <div class="p-4 bg-sky-dark rounded-xl border border-sky-light mb-4">
+                        <h3 class="text-lg font-bold text-accent-purple mb-3 flex items-center">
+                            <span class="text-xl mr-2">💰</span> Average Purple Candy Drop Value per firework (<span class="font-mono">${avgDrop}</span> Candies)
+                        </h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                            <div class="flex justify-between items-center p-2 rounded-lg bg-sky-light">
+                                <span class="text-gray-300">Avg. Worth (Insta Sell):</span>
+                                <span class="font-extrabold text-accent-green">${formatNumber(avgWorthInstaSell)} Coins</span>
+                            </div>
+                            <div class="flex justify-between items-center p-2 rounded-lg bg-sky-light">
+                                <span class="text-gray-300">Avg. Worth (Sell Order):</span>
+                                <span class="font-extrabold text-cyan-400">${formatNumber(avgWorthSellOrder)} Coins</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+
+
+            return `
+                <div class="card bg-gray-800 rounded-xl p-6 border-t-4 border-${color} md:col-span-3">
+                    <h2 class="text-2xl font-bold mb-4 flex items-center text-white">
+                        <span class="text-3xl mr-2">✨</span> 
+                        ${name}
+                    </h2>
+                    
+                    <p class="text-gray-300 mb-4">
+                        When used, the <span class="font-bold text-red-300">Bat Firework</span> instantly grants the player a random quantity of <span class="text-accent-purple font-bold">Purple Candy</span>.
+                    </p>
+
+                    ${avgSummaryHtml}
+
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full text-sm rounded-lg overflow-hidden">
+                            <thead class="bg-sky-dark border-b border-sky-light text-gray-300">
+                                <tr>
+                                    <th class="p-3 text-center font-semibold">Drops</th>
+                                    <th class="p-3 text-center font-semibold">Drop Chance</th>
+                                    <th class="p-3 text-right font-semibold">Worth (Using Insta Sell)</th>
+                                    <th class="p-3 text-right font-semibold">Worth (Using Sell Order)</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${tableRows}
+                            </tbody>
+                        </table>
+                    </div>
+                    <p class="text-xs text-gray-500 mt-4">
+                        Note: The "Worth" columns calculate the value of the dropped candy using the current market prices.
+                    </p>
+                </div>
+            `;
+        };
+
+
+        // Main function to fetch data and render the UI
+        const fetchBazaarPrices = async () => {
+            // 1. Show loading state and hide content container
+            loadingElement.classList.remove('hidden');
+            container.classList.add('hidden');
+            container.innerHTML = ''; // Ensure container is clean
+
+            try {
+                // 2. Fetch the data from the API
+                const response = await fetch(API_URL);
+                if (!response.ok) {
+                    throw new Error('HTTP error! status: ' + response.status);
+                }
+                const data = await response.json();
+
+                if (!data.success || !data.products) {
+                    throw new Error("API call failed or returned invalid data structure.");
+                }
+
+                // 3. Process data and generate item cards
+                let htmlContent = '';
+                let greenCandyData = null; 
+                let batFireworkInstaSellPrice = null; 
+                let purpleCandyInstaBuyPrice = null;
+                let purpleCandyInstaSellPrice = null;
+
+                ITEMS_TO_TRACK.forEach(item => {
+                    const productData = data.products[item.id];
+                    htmlContent += createItemCard(item, productData);
+                    
+                    // Store Green Candy data for crafting cost
+                    if (item.id === "GREEN_CANDY") {
+                        greenCandyData = productData;
+                    }
+                    
+                    // Retrieve Bat Firework Insta-Sell Price (Highest Bid) for crafting margin calculation
+                    if (item.id === "BAT_FIREWORK" && productData && productData.buy_summary?.length) {
+                        batFireworkInstaSellPrice = productData.buy_summary[0].pricePerUnit;
+                    }
+
+                    // Store Purple Candy prices for usage worth calculation
+                    if (item.id === "PURPLE_CANDY" && productData && productData.sell_summary?.length && productData.buy_summary?.length) {
+                        // "Buy order price" (Insta-Buy)
+                        purpleCandyInstaBuyPrice = productData.sell_summary[0].pricePerUnit; 
+                        // "Sell order price" (Insta-Sell)
+                        purpleCandyInstaSellPrice = productData.buy_summary[0].pricePerUnit;
+                    }
+                });
+
+                // 4. Add the crafting cost card
+                if (greenCandyData) {
+                    htmlContent += createCraftingCard(greenCandyData, batFireworkInstaSellPrice);
+                }
+                
+                // 5. Add the usage card
+                htmlContent += createUsageCard(purpleCandyInstaBuyPrice, purpleCandyInstaSellPrice); 
+
+                // 6. Update the container with the generated HTML and show it
+                container.innerHTML = htmlContent;
+                container.classList.remove('hidden');
+
+            } catch (error) {
+                console.error("Failed to fetch Bazaar data:", error);
+                // 6b. On error, display the error message in the container and show it
+                container.innerHTML = 
+                    '<div class="md:col-span-3 text-center p-8 bg-red-900/50 rounded-xl border border-red-700">' +
+                        '<h2 class="text-2xl font-bold text-red-300 mb-2">Error Fetching Data</h2>' +
+                        '<p class="text-red-400">' +
+                            'Could not load prices. Please check the API status or your network connection.' +
+                        '</p>' +
+                        '<p class="text-sm text-red-500 mt-2">Details: ' + error.message + '</p>' +
+                    '</div>';
+                container.classList.remove('hidden');
+            } finally {
+                // 7. Hide the loading state in all scenarios
+                loadingElement.classList.add('hidden');
+            }
+        };
+
+        // Execute the function when the window loads
+        window.onload = fetchBazaarPrices;
+    </script>
+</body>
+</html>
