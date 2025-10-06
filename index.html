@@ -21,6 +21,10 @@
         .card-shadow {
             box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.2), 0 4px 6px -2px rgba(0, 0, 0, 0.1);
         }
+        /* Set a fixed minimum height for all cards for perfect 2x2 alignment */
+        .card-fixed-height {
+            min-height: 17.5rem; /* Equivalent to min-h-70 */
+        }
     </style>
 </head>
 <body class="bg-gray-900 text-white min-h-screen p-4 sm:p-8">
@@ -37,11 +41,11 @@
             </p>
         </header>
 
-        <!-- Cards Grid - Now shows all three cards in a single row on medium screens and up -->
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto">
+        <!-- Cards Grid - Updated to md:grid-cols-2 for 2x2 layout on medium screens and up -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto">
 
             <!-- Card 1: Enchanted Golden Carrot -->
-            <a href="EnchantedGoldenCarrot.html" class="calculator-card group">
+            <a href="EnchantedGoldenCarrot.html" class="calculator-card group card-fixed-height">
                 <div class="text-4xl mb-4 p-3 bg-orange-500/20 text-orange-400 rounded-xl inline-block transition-transform duration-300 group-hover:scale-110">
                     🥕
                 </div>
@@ -52,7 +56,7 @@
             </a>
 
             <!-- Card 2: Braided Griffin Feather -->
-            <a href="BraidedGriffinFeather.html" class="calculator-card group">
+            <a href="BraidedGriffinFeather.html" class="calculator-card group card-fixed-height">
                 <div class="text-4xl mb-4 p-3 bg-cyan-500/20 text-cyan-400 rounded-xl inline-block transition-transform duration-300 group-hover:rotate-6">
                     🪶
                 </div>
@@ -63,7 +67,7 @@
             </a>
             
             <!-- Card 3: Spooky Festival (NEW) -->
-            <a href="SpookyFestival.html" class="calculator-card group">
+            <a href="SpookyFestival.html" class="calculator-card group card-fixed-height">
                 <div class="text-4xl mb-4 p-3 bg-fuchsia-500/20 text-fuchsia-400 rounded-xl inline-block transition-transform duration-300 group-hover:scale-110">
                     🎃
                 </div>
@@ -73,12 +77,20 @@
                 </p>
             </a>
 
+            <!-- Card 4: Bazaar (Corrected Spelling) -->
+            <a href="bazaar.html" class="calculator-card group card-fixed-height">
+                <div class="text-4xl mb-4 p-3 bg-yellow-500/20 text-yellow-400 rounded-xl inline-block transition-transform duration-300 group-hover:scale-110">
+                    🪙
+                </div>
+                <h2 class="text-2xl font-bold mb-2 text-yellow-400">Bazaar</h2>
+                <p class="text-gray-400">
+                    View real-time buy and sell order prices for Hypixel SkyBlock items, perfect for quick market flips.
+                </p>
+            </a>
+
         </div>
 
-        <!-- Footer -->
-        <footer class="mt-16 pt-8 border-t border-gray-800 text-center text-gray-500">
-            <p>&copy; 2025 Twilight Lab. All rights reserved.</p>
-        </footer>
+        <!-- The Footer section has been removed -->
 
     </div>
 
@@ -94,6 +106,7 @@
                     'hover:bg-gray-700', 'transition', 'duration-300', 'ease-in-out',
                     'transform', 'hover:-translate-y-1', 'hover:ring-2', 'hover:ring-amber-500/70',
                     'focus:outline-none', 'focus:ring-2', 'focus:ring-amber-500'
+                    // Removed min-h-[17.5rem] from JS, now applied directly via card-fixed-height class.
                 );
             });
         });
