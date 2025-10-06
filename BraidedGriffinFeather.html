@@ -17,6 +17,20 @@
 </head>
 <body class="min-h-screen flex items-center justify-center p-4">
 
+    <!-- Company Name in Top Left Corner -->
+    <div class="fixed top-4 left-4 text-xl font-bold tracking-widest pointer-events-none">
+        <span class="text-blue-300">Twilight</span><span class="text-white">Lab</span>
+    </div>
+
+    <!-- NEW: Back Button to Top Right Corner -->
+    <a href="index.html" class="fixed top-4 right-4 flex items-center bg-gray-700 hover:bg-gray-600 text-white font-semibold py-2 px-4 rounded-full shadow-lg transition duration-300 ease-in-out transform hover:scale-105">
+        <!-- SVG Home Icon -->
+        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-10l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0v-4a1 1 0 011-1h2a1 1 0 011 1v4m-6 0h6"></path>
+        </svg>
+        Back to Home
+    </a>
+
     <div id="app" class="w-full max-w-xl bg-gray-800 p-8 md:p-10 rounded-xl shadow-2xl border border-gray-700">
         <!-- Title remains teal for accent -->
         <h1 class="text-3xl font-extrabold text-teal-300 mb-6 text-center">
