@@ -1,0 +1,1185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Skyblock Crop Mutations</title>
+    <style>
+        :root {
+            /* Deep Blue Theme Palette */
+            --bg-color: #020617;        /* Very dark navy */
+            --card-bg: #0f172a;         /* Slate 900 */
+            /* --card-hover: #1e293b;      Removed unused variable */
+            --header-bg: rgba(2, 6, 23, 0.95);
+            
+            --text-main: #f8fafc;       /* Slate 50 */
+            --text-muted: #94a3b8;      /* Slate 400 */
+            --text-accent: #38bdf8;     /* Sky 400 */
+            
+            --border: #1e293b;          /* Slate 800 */
+            --border-highlight: #38bdf8;
+            
+            /* Status Colors */
+            --buff: #4ade80;            /* Green */
+            --buff-bg: rgba(74, 222, 128, 0.1);
+            --debuff: #f87171;          /* Red */
+            --debuff-bg: rgba(248, 113, 113, 0.1);
+            --neutral: #cbd5e1;         /* Light Gray */
+            --neutral-bg: rgba(203, 213, 225, 0.1);
+            
+            --copper: #fdba74;          /* Orange-ish */
+            --gold: #fde047;            /* Yellow */
+            
+            /* Surface Badge Colors */
+            --surface-soul: #7f1d1d;    /* Deep Red/Brown */
+            --surface-farm: #14532d;    /* Deep Green */
+            --surface-sand: #78350f;    /* Deep Orange */
+            --surface-end: #4c1d95;     /* Deep Violet */
+            --surface-mycelium: #334155;/* Slate */
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            background-image: 
+                radial-gradient(at 0% 0%, rgba(56, 189, 248, 0.1) 0px, transparent 50%),
+                radial-gradient(at 100% 100%, rgba(99, 102, 241, 0.1) 0px, transparent 50%);
+            background-attachment: fixed;
+            color: var(--text-main);
+            line-height: 1.6;
+            padding-bottom: 60px;
+        }
+
+        /* SVG Icon Classes for UI elements */
+        .icon {
+            width: 18px;
+            height: 18px;
+            stroke: currentColor;
+            stroke-width: 2;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+            fill: none;
+            display: inline-block;
+            vertical-align: middle;
+        }
+
+        /* Header */
+        header {
+            background-color: var(--header-bg);
+            backdrop-filter: blur(12px);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            padding: 24px 0;
+            border-bottom: 1px solid var(--border);
+            box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+        }
+
+        .header-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 24px;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        h1 {
+            font-size: 2.2rem;
+            font-weight: 800;
+            color: var(--text-main);
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            text-shadow: 0 0 30px rgba(56, 189, 248, 0.2);
+            margin: 0;
+        }
+        
+        h1 span {
+            color: var(--text-accent);
+        }
+
+        /* Filter Styles */
+        .filter-container {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .filter-select {
+            background-color: var(--card-bg);
+            color: var(--text-main);
+            border: 1px solid var(--border);
+            padding: 10px 16px;
+            border-radius: 12px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            outline: none;
+            cursor: pointer;
+            transition: all 0.2s;
+            appearance: none;
+            background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2338bdf8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+            background-repeat: no-repeat;
+            background-position: right 12px center;
+            background-size: 16px;
+            padding-right: 40px;
+            min-width: 140px;
+        }
+
+        .filter-select:hover, .filter-select:focus {
+            border-color: var(--border-highlight);
+            box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.2);
+        }
+
+        .filter-select option {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            padding: 10px;
+        }
+
+        /* Grid Layout */
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+            gap: 32px;
+            max-width: 1400px;
+            margin: 48px auto;
+            padding: 0 24px;
+        }
+
+        /* Card Styles */
+        .card {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 28px;
+            display: flex;
+            flex-direction: column;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+        }
+
+        .card:hover {
+            transform: translateY(-8px);
+            border-color: var(--border-highlight);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5), 0 0 15px rgba(56, 189, 248, 0.1);
+            /* Removed background-color change here */
+        }
+
+        /* Decorative top accent */
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, var(--text-accent), transparent);
+            opacity: 0.5;
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .card-title-group {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        /* Emoji Icon Styling */
+        .crop-emoji {
+            font-size: 2.2rem;
+            line-height: 1;
+            filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.1));
+            transition: transform 0.2s ease-out;
+        }
+
+        .card:hover .crop-emoji {
+            transform: scale(1.1); /* Removed rotation */
+        }
+
+        .card-title {
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: var(--text-main);
+            letter-spacing: -0.5px;
+            line-height: 1.2;
+        }
+
+        /* Badges */
+        .badges-row {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 6px 12px;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border: 1px solid transparent;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .badge.size { 
+            background: #1e293b; 
+            color: #94a3b8; 
+            border-color: #334155; 
+        }
+        
+        .badge.surface-soul { background: rgba(127, 29, 29, 0.2); color: #fca5a5; border-color: rgba(127, 29, 29, 0.5); }
+        .badge.surface-farm { background: rgba(20, 83, 45, 0.2); color: #86efac; border-color: rgba(20, 83, 45, 0.5); }
+        .badge.surface-sand { background: rgba(120, 53, 15, 0.2); color: #fdba74; border-color: rgba(120, 53, 15, 0.5); }
+        .badge.surface-end { background: rgba(76, 29, 149, 0.2); color: #d8b4fe; border-color: rgba(76, 29, 149, 0.5); }
+        .badge.surface-mycelium { background: rgba(51, 65, 85, 0.3); color: #cbd5e1; border-color: rgba(51, 65, 85, 0.5); }
+
+        /* Sections */
+        .section-label {
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            font-weight: 800;
+            letter-spacing: 1px;
+            margin: 24px 0 12px 0;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .section-label::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: var(--border);
+            opacity: 0.5;
+        }
+
+        /* Lists */
+        .data-list {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .data-item {
+            font-size: 0.9rem;
+            color: var(--text-main);
+            padding: 10px 14px;
+            background-color: rgba(0, 0, 0, 0.2);
+            border-radius: 10px;
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            border: 1px solid transparent;
+            /* No transition or hover effects here */
+        }
+        
+        /* Effects Styling */
+        .effect-item.buff { 
+            background-color: var(--buff-bg); 
+            border-color: rgba(74, 222, 128, 0.2);
+            color: #dcfce7;
+        }
+        .effect-item.debuff { 
+            background-color: var(--debuff-bg); 
+            border-color: rgba(248, 113, 113, 0.2);
+            color: #fee2e2;
+        }
+        .effect-item.neutral { 
+            background-color: var(--neutral-bg); 
+            border-color: rgba(203, 213, 225, 0.2);
+            color: #f1f5f9;
+        }
+
+        /* Icons in lists */
+        .list-icon {
+            flex-shrink: 0;
+            margin-top: 3px;
+            opacity: 0.9;
+        }
+        
+        .buff .list-icon { color: var(--buff); }
+        .debuff .list-icon { color: var(--debuff); }
+        .neutral .list-icon { color: var(--neutral); }
+
+        /* Other Info Box */
+        .other-info {
+            margin-top: 24px;
+            background: rgba(56, 189, 248, 0.05);
+            border: 1px dashed rgba(56, 189, 248, 0.3);
+            padding: 16px;
+            font-size: 0.85rem;
+            color: var(--text-accent);
+            border-radius: 12px;
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            line-height: 1.5;
+        }
+
+        /* Footer Stats */
+        .footer-stats {
+            margin-top: auto;
+            padding-top: 24px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+
+        .stat-box {
+            background-color: rgba(2, 6, 23, 0.5);
+            padding: 12px;
+            border-radius: 12px;
+            text-align: center;
+            border: 1px solid var(--border);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .stat-box::after {
+            content: '';
+            position: absolute;
+            top: 0; 
+            left: 0; 
+            width: 100%; 
+            height: 100%;
+            background: linear-gradient(to bottom right, rgba(255,255,255,0.03), transparent);
+            pointer-events: none;
+        }
+
+        .stat-label {
+            display: block;
+            font-size: 0.65rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--text-muted);
+            margin-bottom: 6px;
+        }
+
+        .stat-value {
+            font-weight: 700;
+            font-size: 1rem;
+            font-family: 'Courier New', Courier, monospace;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .stat-value.cost { color: var(--gold); text-shadow: 0 0 10px rgba(253, 224, 71, 0.15); }
+        .stat-value.reward { color: var(--copper); text-shadow: 0 0 10px rgba(253, 186, 116, 0.15); }
+        
+        .no-results {
+            grid-column: 1 / -1;
+            text-align: center;
+            color: var(--text-muted);
+            font-size: 1.1rem;
+            padding: 40px;
+        }
+
+        @media (max-width: 600px) {
+            .header-content {
+                justify-content: center;
+            }
+            .filter-container {
+                width: 100%;
+                justify-content: center;
+            }
+            .filter-select {
+                flex: 1;
+            }
+        }
+
+    </style>
+</head>
+<body>
+
+<header>
+    <div class="header-content">
+        <h1>
+            <span>🌱</span> Mutation DB
+        </h1>
+        <div class="filter-container">
+            <select id="sizeFilter" class="filter-select">
+                <option value="all">Plot Size: All</option>
+                <option value="1x1">1x1</option>
+                <option value="2x2">2x2</option>
+                <option value="3x3">3x3</option>
+            </select>
+            <select id="surfaceFilter" class="filter-select">
+                <option value="all">Surface: All</option>
+                <option value="Farmland">Farmland</option>
+                <option value="Soul Sand">Soul Sand</option>
+                <option value="Sand">Sand</option>
+                <option value="End Stone">End Stone</option>
+                <option value="Mycelium">Mycelium</option>
+            </select>
+        </div>
+    </div>
+</header>
+
+<main class="grid" id="cropGrid">
+    <!-- Cards injected here -->
+</main>
+
+<script>
+    // SVG Icons for UI elements
+    const icons = {
+        arrow: `<svg class="list-icon icon" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg>`,
+        check: `<svg class="list-icon icon" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>`,
+        x: `<svg class="list-icon icon" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>`,
+        info: `<svg class="list-icon icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>`,
+        activity: `<svg class="list-icon icon" viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>`,
+        layers: `<svg class="icon" style="width:14px; height:14px;" viewBox="0 0 24 24"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>`,
+        maximize: `<svg class="icon" style="width:14px; height:14px;" viewBox="0 0 24 24"><path d="M15 3h6v6"/><path d="M9 21H3v-6"/><path d="M21 3l-7 7"/><path d="M3 21l7-7"/></svg>`,
+    };
+
+    // Helper to get Emoji based on crop name
+    function getCropEmoji(name) {
+        const n = name.toLowerCase();
+        
+        // Manual mapping for best fit
+        if (n.includes('ash')) return '🔥';
+        if (n.includes('choco') || n.includes('cocoa')) return '🍫';
+        if (n.includes('dust')) return '🌾';
+        if (n.includes('gloom')) return '🎃';
+        if (n.includes('lily')) return '🌺';
+        if (n.includes('scour')) return '🥕';
+        if (n.includes('shade')) return '🌿';
+        if (n.includes('veil')) return '🍄';
+        if (n.includes('wither')) return '🥀';
+        if (n.includes('berry') && !n.includes('blast')) return '🍇';
+        if (n.includes('cinder')) return '🌋';
+        if (n.includes('coal')) return '🌑';
+        if (n.includes('cream')) return '🍦';
+        if (n.includes('dusk')) return '🌸';
+        if (n.includes('thorn')) return '🌹';
+        if (n.includes('blast')) return '💥';
+        if (n.includes('cheese')) return '🧀';
+        if (n.includes('chloronite')) return '💎';
+        if (n.includes('do-not')) return '🍄';
+        if (n.includes('flesh')) return '🥩';
+        if (n.includes('jelly')) return '🍬';
+        if (n.includes('nocti')) return '🕯️';
+        if (n.includes('snooz')) return '💤';
+        if (n.includes('soggy')) return '💧';
+        if (n.includes('chorus')) return '🔮';
+        if (n.includes('plantboy')) return '👾';
+        if (n.includes('puffer')) return '🐡';
+        if (n.includes('shell')) return '🐚';
+        if (n.includes('startle')) return '😱';
+        if (n.includes('stoplight')) return '🚦';
+        if (n.includes('thunder')) return '⚡';
+        if (n.includes('turtle')) return '🐢';
+        if (n.includes('zomb')) return '🧟';
+        if (n.includes('aloe')) return '🌵';
+        if (n.includes('devour')) return '👹';
+        if (n.includes('glass')) return '🌽';
+        if (n.includes('god')) return '✨';
+        if (n.includes('jerry')) return '👱';
+        if (n.includes('phantom')) return '👻';
+        if (n.includes('time')) return '⏳';
+        
+        return '🌱'; // Default
+    }
+
+    // Data extracted from source
+    const crops = [
+        {
+            name: "Ashwreath",
+            size: "1x1",
+            surface: "Soul Sand",
+            spreading: ["4x Nether Wart", "4x Fire"],
+            effects: [
+                { type: "buff", text: "Improved Harvest Boost: Yield +30%" },
+                { type: "debuff", text: "XP Loss: -20% Farming XP to adjacent" }
+            ],
+            cost: "10k Coins",
+            copper: "+5",
+            other: null
+        },
+        {
+            name: "Choconut",
+            size: "1x1",
+            surface: "Farmland",
+            spreading: ["4x Cocoa Beans"],
+            effects: [
+                { type: "buff", text: "Immunity: Prevents negative effects" }
+            ],
+            cost: "10k Coins",
+            copper: "+5",
+            other: null
+        },
+        {
+            name: "Dustgrain",
+            size: "1x1",
+            surface: "Farmland",
+            spreading: ["4x Wheat"],
+            effects: [
+                { type: "buff", text: "Harvest Boost: Yield +20%" }
+            ],
+            cost: "10k Coins",
+            copper: "+5",
+            other: null
+        },
+        {
+            name: "Gloomgourd",
+            size: "1x1",
+            surface: "Farmland",
+            spreading: ["1x Pumpkin", "1x Melon"],
+            effects: [
+                { type: "buff", text: "Water Retain: Retains water status +50%" },
+                { type: "buff", text: "Bonus Drops: Extra loot pool roll" }
+            ],
+            cost: "10k Coins",
+            copper: "+5",
+            other: null
+        },
+        {
+            name: "Lonelily",
+            size: "1x1",
+            surface: "Farmland",
+            spreading: ["Appears randomly over time on empty farmland"],
+            effects: [
+                { type: "buff", text: "Bonus Drops: Extra loot pool roll" }
+            ],
+            cost: "50k Coins",
+            copper: "+25",
+            other: null
+        },
+        {
+            name: "Scourroot",
+            size: "1x1",
+            surface: "Farmland",
+            spreading: ["2x Potato", "2x Carrot"],
+            effects: [
+                { type: "buff", text: "XP Boost: +20% Farming XP to adjacent" },
+                { type: "buff", text: "Immunity: Prevents negative effects" }
+            ],
+            cost: "10k Coins",
+            copper: "+5",
+            other: null
+        },
+        {
+            name: "Shadevine",
+            size: "1x1",
+            surface: "Sand",
+            spreading: ["2x Cactus", "2x Sugar Cane"],
+            effects: [
+                { type: "buff", text: "Improved Water Retain: +100%" },
+                { type: "buff", text: "Improved XP Boost: +30% Farming XP" },
+                { type: "debuff", text: "Harvest Loss: Yield -20%" }
+            ],
+            cost: "10k Coins",
+            copper: "+5",
+            other: "Drops nothing without additional yield boost"
+        },
+        {
+            name: "Veilshroom",
+            size: "1x1",
+            surface: "Mycelium",
+            spreading: ["2x Red Mushroom", "2x Brown Mushroom"],
+            effects: [
+                { type: "buff", text: "Improved Harvest Boost: Yield +30%" },
+                { type: "debuff", text: "Water Drain: Reduces water status of nearby by -30%" }
+            ],
+            cost: "10k Coins",
+            copper: "+5",
+            other: null
+        },
+        {
+            name: "Witherbloom",
+            size: "1x1",
+            surface: "Soul Sand",
+            spreading: ["8x Dead Plant"],
+            effects: [
+                { type: "neutral", text: "Effect Spread: Spreads other buffs/debuffs to adjacent crops" }
+            ],
+            cost: "40k Coins",
+            copper: "+20",
+            other: null
+        },
+        {
+            name: "Chocoberry",
+            size: "1x1",
+            surface: "Farmland",
+            spreading: ["6x Choconut", "2x Gloomgourd"],
+            effects: [
+                { type: "buff", text: "Water Retain: +50%" }
+            ],
+            cost: "60k Coins",
+            copper: "+30",
+            other: null
+        },
+        {
+            name: "Cindershade",
+            size: "1x1",
+            surface: "Soul Sand",
+            spreading: ["4x Ashwreath", "4x Witherbloom"],
+            effects: [
+                { type: "neutral", text: "Effect Spread: Spreads buffs/debuffs" },
+                { type: "buff", text: "Improved Harvest Boost: Yield +30%" },
+                { type: "debuff", text: "XP Loss: -20% Farming XP" }
+            ],
+            cost: "80k Coins",
+            copper: "+40",
+            other: null
+        },
+        {
+            name: "Coalroot",
+            size: "1x1",
+            surface: "Farmland",
+            spreading: ["5x Ashwreath", "3x Scourroot"],
+            effects: [
+                { type: "buff", text: "XP Boost: +20% Farming XP" }
+            ],
+            cost: "80k Coins",
+            copper: "+40",
+            other: null
+        },
+        {
+            name: "Creambloom",
+            size: "1x1",
+            surface: "Farmland",
+            spreading: ["8x Choconut"],
+            effects: [
+                { type: "buff", text: "Immunity: Prevents negative effects" }
+            ],
+            cost: "60k Coins",
+            copper: "+30",
+            other: null
+        },
+        {
+            name: "Duskbloom",
+            size: "1x1",
+            surface: "Farmland",
+            spreading: ["2x Moonflower", "2x Shadevine", "2x Sunflower", "2x Dustgrain"],
+            effects: [
+                { type: "buff", text: "Bonus Drops: Extra loot pool roll" }
+            ],
+            cost: "80k Coins",
+            copper: "+40",
+            other: null
+        },
+        {
+            name: "Thornshade",
+            size: "1x1",
+            surface: "Farmland",
+            spreading: ["4x Wild Rose", "4x Veilshroom"],
+            effects: [
+                { type: "neutral", text: "Effect Spread: Spreads buffs/debuffs" }
+            ],
+            cost: "80k Coins",
+            copper: "+40",
+            other: null
+        },
+        {
+            name: "Blastberry",
+            size: "1x1",
+            surface: "Sand",
+            spreading: ["5x Chocoberry", "3x Ashwreath"],
+            effects: [
+                { type: "buff", text: "Immunity: Prevents negative effects" },
+                { type: "buff", text: "Improved Harvest Boost: Yield +30%" },
+                { type: "debuff", text: "XP Loss: -20% Farming XP" }
+            ],
+            cost: "240k Coins",
+            copper: "+120",
+            other: null
+        },
+        {
+            name: "Cheesebite",
+            size: "1x1",
+            surface: "Farmland",
+            spreading: ["4x Creambloom", "4x Fermento"],
+            effects: [
+                { type: "buff", text: "Improved Water Retain: +100%" },
+                { type: "debuff", text: "Harvest Loss: Yield -20%" }
+            ],
+            cost: "80k Coins",
+            copper: "+80",
+            other: "Requires Pickaxe with Breaking Power 1+ to harvest"
+        },
+        {
+            name: "Chloronite",
+            size: "1x1",
+            surface: "Farmland",
+            spreading: ["6x Coalroot", "2x Thornshade"],
+            effects: [
+                { type: "buff", text: "Immunity: Prevents negative effects" }
+            ],
+            cost: "40k Coins",
+            copper: "+20",
+            other: null
+        },
+        {
+            name: "Do-not-eat-shroom",
+            size: "1x1",
+            surface: "Farmland",
+            spreading: ["4x Veilshroom", "4x Scourroot"],
+            effects: [
+                { type: "buff", text: "Improved Harvest Boost: Yield +30%" },
+                { type: "debuff", text: "Water Drain: Reduces water status -30%" }
+            ],
+            cost: "240k Coins",
+            copper: "+120",
+            other: null
+        },
+        {
+            name: "Fleshtrap",
+            size: "1x1",
+            surface: "Farmland",
+            spreading: ["4x Cindershade", "4x Lonelily"],
+            effects: [
+                { type: "buff", text: "Bonus Drops: Extra loot pool roll" }
+            ],
+            cost: "360k Coins",
+            copper: "+180",
+            other: "Needs to be fed Raw Meat when hungry. Enchanted items give a bonus."
+        },
+        {
+            name: "Magic Jellybean",
+            size: "1x1",
+            surface: "Sand",
+            spreading: ["5x Sugar Cane", "3x Duskbloom"],
+            effects: [
+                { type: "buff", text: "Improved XP Boost: +30% Farming XP" },
+                { type: "debuff", text: "Harvest Loss: Yield -20%" }
+            ],
+            cost: "160k Coins",
+            copper: "+80",
+            other: null
+        },
+        {
+            name: "Noctilume",
+            size: "2x2",
+            surface: "Farmland",
+            spreading: ["6x Duskbloom", "6x Lonelily"],
+            effects: [
+                { type: "neutral", text: "Effect Spread: Spreads buffs/debuffs" },
+                { type: "buff", text: "Improved Water Retain: +100%" },
+                { type: "debuff", text: "Harvest Loss: Yield -20%" }
+            ],
+            cost: "300k Coins",
+            copper: "+150",
+            other: "Growth stages need alternating Day and Night"
+        },
+        {
+            name: "Snoozling",
+            size: "3x3",
+            surface: "Farmland",
+            spreading: ["4x Creambloom", "3x Dustgrain", "3x Witherbloom", "3x Duskbloom", "3x Thornshade"],
+            effects: [
+                { type: "buff", text: "Bonus Drops: Extra loot pool roll" }
+            ],
+            cost: "600k Coins",
+            copper: "+300",
+            other: "Must be woken up every 5 growth stages to continue growing"
+        },
+        {
+            name: "Soggybud",
+            size: "1x1",
+            surface: "Farmland",
+            spreading: ["8x Melon"],
+            effects: [
+                { type: "buff", text: "Water Retain: +50%" }
+            ],
+            cost: "60k Coins",
+            copper: "+30",
+            other: null
+        },
+        {
+            name: "Chorus Fruit",
+            size: "1x1",
+            surface: "End Stone",
+            spreading: ["5x Chloronite", "3x Magic Jellybean"],
+            effects: [
+                { type: "buff", text: "Improved XP Boost: +30% Farming XP" },
+                { type: "debuff", text: "Harvest Loss: Yield -20%" }
+            ],
+            cost: "600k Coins",
+            copper: "+300",
+            other: "Teleports around the plot as it grows"
+        },
+        {
+            name: "PlantBoy Advance",
+            size: "2x2",
+            surface: "Farmland",
+            spreading: ["6x Snoozling", "6x Thunderling"],
+            effects: [
+                { type: "buff", text: "Harvest Boost: Yield +20%" }
+            ],
+            cost: "700k Coins",
+            copper: "+350",
+            other: "Requires 8 apples in a game of Snake to harvest"
+        },
+        {
+            name: "Puffercloud",
+            size: "1x1",
+            surface: "Farmland",
+            spreading: ["2x Snoozling", "6x Do-not-eat-shroom"],
+            effects: [
+                { type: "buff", text: "Improved Harvest Boost: Yield +30%" },
+                { type: "debuff", text: "Water Drain: Reduces water status -30%" }
+            ],
+            cost: "1m Coins",
+            copper: "+500",
+            other: "Has a painful cloud of gas around it while it grows"
+        },
+        {
+            name: "Shellfruit",
+            size: "1x1",
+            surface: "Farmland",
+            spreading: ["Explode a Turtlellini with a Blastberry"],
+            effects: [
+                { type: "buff", text: "Water Retain: +50%" },
+                { type: "buff", text: "Immunity: Prevents negative effects" }
+            ],
+            cost: "500k Coins",
+            copper: "+250",
+            other: "Wear Sorrow Armor in order to harvest it"
+        },
+        {
+            name: "Startlevine",
+            size: "1x1",
+            surface: "Farmland",
+            spreading: ["4x Blastberry", "4x Cheesebite"],
+            effects: [
+                { type: "buff", text: "Improved Water Retain: +100%" },
+                { type: "buff", text: "Improved XP Boost: +30% Farming XP" },
+                { type: "debuff", text: "Harvest Loss: Yield -20%" }
+            ],
+            cost: "500k Coins",
+            copper: "+250",
+            other: "Repeatedly punch to harvest while it says 'GO'"
+        },
+        {
+            name: "Stoplight Petal",
+            size: "1x1",
+            surface: "Farmland",
+            spreading: ["4x Snoozling", "4x Noctilume"],
+            effects: [
+                { type: "neutral", text: "Effect Spread: Spreads buffs/debuffs" },
+                { type: "buff", text: "Improved Water Retain: +100%" },
+                { type: "debuff", text: "Harvest Loss: Yield -20%" }
+            ],
+            cost: "4m Coins",
+            copper: "+2000",
+            other: null
+        },
+        {
+            name: "Thunderling",
+            size: "1x1",
+            surface: "Farmland",
+            spreading: ["5x Soggybud", "3x Noctilume"],
+            effects: [
+                { type: "neutral", text: "Effect Spread: Spreads buffs/debuffs" }
+            ],
+            cost: "800k Coins",
+            copper: "+400",
+            other: "Must be discharged while it grows, otherwise it will explode"
+        },
+        {
+            name: "Turtlellini",
+            size: "1x1",
+            surface: "Farmland",
+            spreading: ["4x Soggybud", "4x Choconut"],
+            effects: [
+                { type: "buff", text: "Water Retain: +50%" },
+                { type: "buff", text: "Immunity: Prevents negative effects" }
+            ],
+            cost: "240k Coins",
+            copper: "+120",
+            other: null
+        },
+        {
+            name: "Zombud",
+            size: "1x1",
+            surface: "Soul Sand",
+            spreading: ["4x Dead Plant", "2x Cindershade", "2x Fleshtrap"],
+            effects: [
+                { type: "neutral", text: "Effect Spread: Spreads buffs/debuffs" },
+                { type: "buff", text: "Bonus Drops: Extra loot pool roll" }
+            ],
+            cost: "1m Coins",
+            copper: "+500",
+            other: "Converts nearby Dead Plants into Zombuddies when harvested"
+        },
+        {
+            name: "All-in Aloe",
+            size: "1x1",
+            surface: "Sand",
+            spreading: ["6x Magic Jellybean", "2x PlantBoy Advance"],
+            effects: [
+                { type: "buff", text: "Harvest Boost: Yield +20%" }
+            ],
+            cost: "4.6m Coins",
+            copper: "+2300",
+            other: "Gives more fragments the longer it grows, but can reset"
+        },
+        {
+            name: "Devourer",
+            size: "1x1",
+            surface: "Farmland",
+            spreading: ["4x Puffercloud", "4x Zombud"],
+            effects: [
+                { type: "buff", text: "Bonus Drops: Extra loot pool roll" },
+                { type: "buff", text: "Improved Harvest Boost: Yield +30%" },
+                { type: "debuff", text: "Water Drain: Reduces water status -30%" }
+            ],
+            cost: "10m Coins",
+            copper: "+5000",
+            other: "Spreads roots and overtakes other plants on your garden"
+        },
+        {
+            name: "Glasscorn",
+            size: "2x2",
+            surface: "Sand",
+            spreading: ["6x Startlevine", "6x Chloronite"],
+            effects: [
+                { type: "buff", text: "Immunity: Prevents negative effects" },
+                { type: "buff", text: "Improved Water Retain: +100%" },
+                { type: "debuff", text: "Harvest Loss: Yield -20%" }
+            ],
+            cost: "4m Coins",
+            copper: "+2000",
+            other: "Must be harvested on stage 7 or 8, otherwise resets"
+        },
+        {
+            name: "Godseed",
+            size: "3x3",
+            surface: "Farmland",
+            spreading: ["All positive crop effects"],
+            effects: [
+                { type: "buff", text: "Improved Harvest Boost: +30%" },
+                { type: "buff", text: "Improved Water Retain: +100%" },
+                { type: "buff", text: "Improved XP Boost: +30%" },
+                { type: "buff", text: "Immunity: Prevents negative effects" },
+                { type: "buff", text: "Bonus Drops: Extra loot pool roll" },
+                { type: "neutral", text: "Effect Spread: Spreads buffs/debuffs" }
+            ],
+            cost: "1m Coins",
+            copper: "+500",
+            other: null
+        },
+        {
+            name: "Jerryflower",
+            size: "1x1",
+            surface: "Farmland",
+            spreading: ["Jerryseed Quest Chain (See Info)"],
+            effects: [],
+            cost: "N/A",
+            copper: "N/A",
+            other: "Complex Quest involving Jerry Visitor, Crystal Hollows, and Dwarven Mines"
+        },
+        {
+            name: "Phantomleaf",
+            size: "1x1",
+            surface: "Soul Sand",
+            spreading: ["4x Chorus Fruit", "4x Shellfruit"],
+            effects: [
+                { type: "buff", text: "XP Boost: +20% Farming XP" },
+                { type: "buff", text: "Immunity: Prevents negative effects" }
+            ],
+            cost: "3m Coins",
+            copper: "+1500",
+            other: "Hides disguised as another plant when harvested"
+        },
+        {
+            name: "Timestalk",
+            size: "1x1",
+            surface: "End Stone",
+            spreading: ["4x Stoplight Petal", "2x Chorus Fruit", "2x Shellfruit"],
+            effects: [
+                { type: "buff", text: "Improved Water Retain: +100%" },
+                { type: "buff", text: "Improved XP Boost: +30% Farming XP" },
+                { type: "debuff", text: "Harvest Loss: Yield -20%" }
+            ],
+            cost: "19m Coins",
+            copper: "+9500",
+            other: "Grows in reverse. Spawns a Timestalk Clone of you when harvested."
+        }
+    ];
+
+    const grid = document.getElementById('cropGrid');
+    const sizeFilter = document.getElementById('sizeFilter');
+    const surfaceFilter = document.getElementById('surfaceFilter');
+
+    // Helper to determine badge color class based on surface text
+    function getSurfaceClass(surface) {
+        const s = surface.toLowerCase();
+        if (s.includes('soul')) return 'surface-soul';
+        if (s.includes('farm') || s.includes('dirt')) return 'surface-farm';
+        if (s.includes('sand')) return 'surface-sand';
+        if (s.includes('end')) return 'surface-end';
+        if (s.includes('mycelium')) return 'surface-mycelium';
+        return 'surface-farm'; // default
+    }
+
+    // Helper to pick icon for effect type
+    function getEffectIcon(type) {
+        if (type === 'buff') return icons.check;
+        if (type === 'debuff') return icons.x;
+        return icons.activity;
+    }
+
+    function renderCrops(data) {
+        grid.innerHTML = '';
+
+        if (data.length === 0) {
+            grid.innerHTML = '<div class="no-results">No crops match your filters.</div>';
+            return;
+        }
+        
+        data.forEach((crop, index) => {
+            const card = document.createElement('div');
+            card.className = 'card';
+            
+            // Animation delay for staggered load
+            card.style.animation = `fadeIn 0.4s ease-out forwards ${index * 0.05}s`;
+            card.style.opacity = '0'; // Initial state for animation
+            card.animate([
+                { opacity: 0, transform: 'translateY(10px)' },
+                { opacity: 1, transform: 'translateY(0)' }
+            ], {
+                duration: 400,
+                delay: index * 50,
+                fill: 'forwards',
+                easing: 'ease-out'
+            });
+
+            // Spreading List
+            const spreadingHtml = crop.spreading.map(s => `
+                <li class="data-item">
+                    ${icons.arrow}
+                    <span>${s}</span>
+                </li>
+            `).join('');
+
+            // Effects List
+            let effectsHtml = '';
+            if (crop.effects.length > 0) {
+                effectsHtml = `<div class="section-label">${icons.activity} Effects</div>
+                <ul class="data-list">` + 
+                crop.effects.map(ef => `
+                    <li class="data-item effect-item ${ef.type}">
+                        ${getEffectIcon(ef.type)}
+                        <span>${ef.text}</span>
+                    </li>
+                `).join('') + 
+                `</ul>`;
+            }
+
+            // Other Info
+            const otherHtml = crop.other ? `
+                <div class="other-info">
+                    ${icons.info}
+                    <span>${crop.other}</span>
+                </div>
+            ` : '';
+
+            // Get the specific emoji for this crop
+            const cropEmoji = getCropEmoji(crop.name);
+
+            card.innerHTML = `
+                <div class="card-header">
+                    <div class="card-title-group">
+                        <span class="crop-emoji">${cropEmoji}</span>
+                        <span class="card-title">${crop.name}</span>
+                    </div>
+                    <div class="badges-row">
+                        <span class="badge size">${icons.maximize} ${crop.size}</span>
+                    </div>
+                </div>
+                
+                <div class="badges-row" style="margin-bottom: 20px;">
+                    <span class="badge ${getSurfaceClass(crop.surface)}">${icons.layers} ${crop.surface}</span>
+                </div>
+                
+                <div class="section-label">Spreading Conditions</div>
+                <ul class="data-list">
+                    ${spreadingHtml}
+                </ul>
+
+                ${effectsHtml}
+                ${otherHtml}
+
+                <div class="footer-stats">
+                    <div class="stat-box">
+                        <span class="stat-label">Analyze Cost</span>
+                        <div class="stat-value cost">
+                            <span style="font-size:1.2em">💰</span> ${crop.cost}
+                        </div>
+                    </div>
+                    <div class="stat-box">
+                        <span class="stat-label">Copper Reward</span>
+                        <div class="stat-value reward">
+                             <span style="font-size:1.2em">🥉</span> ${crop.copper}
+                        </div>
+                    </div>
+                </div>
+            `;
+            grid.appendChild(card);
+        });
+    }
+
+    function applyFilters() {
+        const sizeVal = sizeFilter.value;
+        const surfaceVal = surfaceFilter.value;
+
+        const filtered = crops.filter(crop => {
+            const sizeMatch = sizeVal === 'all' || crop.size === sizeVal;
+            
+            // Check Surface (handle "Sand" vs "Soul Sand" distinction)
+            let surfaceMatch = false;
+            if (surfaceVal === 'all') {
+                surfaceMatch = true;
+            } else if (surfaceVal === 'Sand') {
+                // strict match for Sand to exclude Soul Sand
+                surfaceMatch = crop.surface === 'Sand';
+            } else {
+                surfaceMatch = crop.surface.toLowerCase().includes(surfaceVal.toLowerCase());
+            }
+            
+            return sizeMatch && surfaceMatch;
+        });
+        
+        renderCrops(filtered);
+    }
+
+    // Initial Render
+    document.addEventListener("DOMContentLoaded", () => {
+        renderCrops(crops);
+        sizeFilter.addEventListener('change', applyFilters);
+        surfaceFilter.addEventListener('change', applyFilters);
+    });
+
+</script>
+
+</body>
+</html>
