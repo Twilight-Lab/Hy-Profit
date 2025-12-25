@@ -3,386 +3,292 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="icon" type="image/png" href="favicon.png">
     <title>Hypixel Bazaar Item Fetcher</title>
-    <!-- Load Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
         body {
-            font-family: 'Inter', sans-serif;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background: radial-gradient(circle at top left, #0f172a, #020617);
         }
-        /* Custom scrollbar style for the autocomplete list */
-        #autocomplete-list::-webkit-scrollbar {
-            width: 8px;
+        .glass-panel {
+            background: rgba(30, 41, 59, 0.4);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
         }
-        #autocomplete-list::-webkit-scrollbar-thumb {
-            background-color: #4b5563; /* Gray-600 */
-            border-radius: 4px;
+        .search-glow:focus-within {
+            box-shadow: 0 0 20px rgba(45, 212, 191, 0.15);
         }
-        #autocomplete-list::-webkit-scrollbar-track {
-            background-color: #374151; /* Gray-700 */
+        /* Custom scrollbar */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #334155; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: #475569; }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
         }
+        .animate-fade-in { animation: fadeIn 0.4s ease-out forwards; }
     </style>
 </head>
-<!-- Body remains flexible column, now the header elements are fixed again -->
-<body class="bg-gray-900 min-h-screen flex flex-col items-center p-4">
+<body class="text-slate-200 min-h-screen">
 
-    <!-- Company Name in Top Left Corner (FIXED) -->
-    <div class="fixed top-4 left-4 text-xl font-bold tracking-widest pointer-events-none z-30">
-        <span class="text-blue-300">Twilight</span><span class="text-white">Lab</span>
-    </div>
-
-    <!-- Back Button to Top Right Corner (FIXED) -->
-    <a href="index.html" class="fixed top-4 right-4 flex items-center bg-gray-700 hover:bg-gray-600 text-white font-semibold py-2 px-4 rounded-full shadow-lg transition duration-300 ease-in-out transform hover:scale-105 z-30">
-        <!-- SVG Home Icon -->
-        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-10l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0v-4a1 1 0 011-1h2a1 1 0 011 1v4m-6 0h6"></path>
-        </svg>
-        Back to Home
-    </a>
-
-    <!-- Main Content Container - Added pt-16 to push content below the fixed buttons -->
-    <div class="p-6 md:p-8 w-full max-w-xl transition-all duration-300 pt-16">
-        <h1 class="text-3xl font-extrabold text-center text-teal-400 mb-2">Hypixel Skyblock Bazaar <span class="text-xl">💰</span></h1>
-        <p class="text-gray-400 text-center text-sm mb-6">Start typing an item ID or name (e.g., <span class="font-mono bg-gray-700 rounded-md px-1 py-0.5 text-xs text-green-300">DIAMOND</span> or <span class="font-mono bg-gray-700 rounded-md px-1 py-0.5 text-xs text-green-300">ENCHANTED STONE</span>) to view real-time prices.</p>
-
-        <div class="relative mb-6">
-            <div class="flex items-center">
-                <!-- Search Icon -->
-                <svg class="absolute left-3 w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
-                
-                <input type="text" id="itemInput" oninput="handleInput()" placeholder="Search item name or ID..." class="w-full p-3 pl-10 border-2 border-gray-600 bg-gray-700 text-white rounded-lg placeholder-gray-400 focus:outline-none focus:ring-4 focus:ring-teal-500/50 transition duration-300 uppercase font-mono tracking-wider">
+    <!-- Header Navigation -->
+    <header class="fixed top-0 w-full z-50 glass-panel border-b border-white/5 px-6 py-4">
+        <div class="max-w-7xl mx-auto flex justify-between items-center">
+            <div class="flex items-center space-x-2">
+                <div class="w-8 h-8 bg-teal-500 rounded-lg flex items-center justify-center shadow-lg shadow-teal-500/20">
+                    <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path></svg>
+                </div>
+                <div class="text-xl font-extrabold tracking-tight">
+                    <span class="text-white">Twilight</span><span class="text-teal-400">Lab</span>
+                </div>
             </div>
-            <div id="autocomplete-list" class="absolute z-20 w-full bg-gray-700 border border-gray-600 rounded-lg shadow-xl max-h-60 overflow-y-auto mt-1 hidden"></div>
+
+            <a href="index.html" class="flex items-center px-4 py-2 rounded-full bg-white/5 hover:bg-white/10 border border-white/10 text-sm font-semibold transition-all hover:scale-105 active:scale-95">
+                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-10l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0v-4a1 1 0 011-1h2a1 1 0 011 1v4m-6 0h6"></path></svg>
+                Dashboard
+            </a>
+        </div>
+    </header>
+
+    <main class="max-w-4xl mx-auto pt-32 pb-20 px-6">
+        <!-- Hero Section -->
+        <div class="text-center mb-12 animate-fade-in">
+            <h1 class="text-4xl md:text-5xl font-black text-white mb-4 tracking-tight">
+                Bazaar <span class="text-teal-400">Analytics</span>
+            </h1>
+            <p class="text-slate-400 text-lg max-w-lg mx-auto">
+                Real-time market insights for Hypixel Skyblock. Enter an item to analyze order books.
+            </p>
+        </div>
+
+        <!-- Search Console Wrapper with Higher Z-Index -->
+        <div class="relative max-w-2xl mx-auto mb-16 animate-fade-in z-40" style="animation-delay: 0.1s">
+            <div class="search-glow glass-panel rounded-2xl flex items-center p-2 transition-all duration-300">
+                <div class="pl-4 pr-2">
+                    <svg class="w-6 h-6 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                </div>
+                <input type="text" id="itemInput" autocomplete="off" oninput="handleInput()" placeholder="Search item (e.g. Diamond, Carrot...)" 
+                    class="w-full bg-transparent py-4 text-white text-lg placeholder-slate-500 focus:outline-none uppercase font-bold tracking-wide">
+                
+                <button id="clearBtn" onclick="clearSearch()" class="p-3 text-slate-500 hover:text-white transition-colors hidden">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            </div>
+
+            <!-- Autocomplete Floating Menu -->
+            <div id="autocomplete-list" class="absolute z-50 w-full mt-2 glass-panel rounded-xl shadow-2xl border border-white/10 overflow-y-auto hidden max-h-80"></div>
         </div>
         
-        <!-- REMOVED: bg-gray-700, rounded-xl, border-gray-600, and adjusted padding -->
-        <div id="results" class="min-h-[150px] p-0 flex items-center justify-center">
-            <!-- Results will be displayed here -->
-            <div class="text-gray-400 text-center p-4" id="initialMessage">Loading live Bazaar data...</div>
+        <!-- Dashboard Content -->
+        <div id="results" class="animate-fade-in relative z-10" style="animation-delay: 0.2s">
+            <div class="glass-panel rounded-3xl p-12 text-center border-dashed border-2 border-white/5">
+                <div class="w-16 h-16 bg-white/5 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                    <svg class="w-8 h-8 text-teal-500 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                </div>
+                <h3 class="text-xl font-bold text-white mb-2">Ready for analysis</h3>
+                <p class="text-slate-400">Waiting for live data sync...</p>
+            </div>
         </div>
-    </div>
+    </main>
 
     <script>
-        // Global variables to store the fetched data and item list
         let BAZAAR_DATA = {};
-        // ITEM_MAP stores both ID and Name for searching
         let ITEM_MAP = [];
         let ITEM_IDS = []; 
-
-        // Debounce timer variables
         let typingTimer;
-        const typingDelay = 600; // Delay in milliseconds for auto-fetch after typing stops
+        const typingDelay = 400;
 
         const itemInput = document.getElementById('itemInput');
+        const clearBtn = document.getElementById('clearBtn');
         const autocompleteList = document.getElementById('autocomplete-list');
         const resultsContainer = document.getElementById('results');
-        const initialMessage = document.getElementById('initialMessage');
         
-        /**
-         * Clears previous results and shows a loading message with an enhanced spinner.
-         * @param {string} message - The message to display while loading.
-         */
-        function showLoading(message = "Fetching data...") {
+        function showLoading(message = "Syncing Data") {
             resultsContainer.innerHTML = `
-                <div class="flex flex-col items-center justify-center w-full h-full text-center text-teal-400 py-8">
-                    <svg class="animate-spin h-8 w-8 text-teal-400 mb-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                    </svg>
-                    <span class="text-lg">${message}</span>
+                <div class="flex flex-col items-center justify-center py-20 text-teal-400" id="loadingState">
+                    <div class="relative w-12 h-12 mb-4">
+                        <div class="absolute inset-0 border-4 border-teal-500/20 rounded-full"></div>
+                        <div class="absolute inset-0 border-4 border-teal-500 border-t-transparent rounded-full animate-spin"></div>
+                    </div>
+                    <span class="text-sm font-bold tracking-widest uppercase opacity-75">${message}</span>
+                </div>
+            `;
+        }
+
+        function showInitialState(itemCount) {
+             resultsContainer.innerHTML = `
+                <div class="glass-panel rounded-3xl p-12 text-center border-dashed border-2 border-white/5">
+                    <div class="w-16 h-16 bg-teal-500/10 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                        <svg class="w-8 h-8 text-teal-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                    </div>
+                    <h3 class="text-xl font-bold text-white mb-2">Live Data Connected</h3>
+                    <p class="text-slate-400">Indexed ${itemCount} products. Start searching.</p>
                 </div>
             `;
         }
         
-        /**
-         * Initializes data by fetching all products from the Hypixel Bazaar API.
-         */
         async function initializeBazaarData() {
-            showLoading("Loading live Bazaar data...");
+            showLoading("Initializing API Connection");
             try {
-                // Initial fetch to get all product IDs and data
                 const response = await fetch('https://api.hypixel.net/skyblock/bazaar');
+                if (!response.ok) throw new Error('API request failed');
+                
                 const data = await response.json();
 
                 if (data.success) {
                     BAZAAR_DATA = data.products;
                     ITEM_IDS = Object.keys(BAZAAR_DATA).sort();
+                    ITEM_MAP = ITEM_IDS.map(id => ({ id, name: id.replace(/_/g, ' ') }));
                     
-                    // Create the ITEM_MAP for dual name/ID searching
-                    ITEM_MAP = ITEM_IDS.map(id => ({
-                        id: id,
-                        // Create a user-friendly name, which is used for display and matching
-                        // Example: CARROT_ITEM becomes CARROT ITEM
-                        name: id.replace(/_/g, ' ')
-                    }));
-                    
-                    initialMessage.textContent = `Data loaded! Total items: ${ITEM_IDS.length}. Start typing now.`;
-                    initialMessage.classList.remove('text-gray-400');
-                    initialMessage.classList.add('text-green-400');
-
-                    // Automatically hide the initial message after a delay
-                    setTimeout(() => {
-                        // Restore initial message if no search has been performed
-                        if (itemInput.value.length === 0) {
-                            resultsContainer.innerHTML = '<div class="text-gray-400 text-center p-4">Start searching for an item to see its real-time prices.</div>';
-                        }
-                    }, 3000);
+                    showInitialState(ITEM_IDS.length);
                 } else {
-                    initialMessage.textContent = `Error fetching data: ${data.cause || 'Unknown error.'}`;
-                    initialMessage.classList.add('text-red-400');
+                    throw new Error(data.cause || 'Unknown API Error');
                 }
             } catch (error) {
                 console.error("API Fetch Error:", error);
-                initialMessage.innerHTML = `
-                    <strong class="text-red-400">🚨 Connection Error!</strong><br>
-                    Could not connect to the Hypixel API. Please check your network connection.
+                resultsContainer.innerHTML = `
+                    <div class="glass-panel rounded-3xl p-12 text-center border-red-500/20 border-2">
+                        <div class="text-red-400 font-bold mb-2">Connection Failed</div>
+                        <p class="text-slate-500 text-sm">Please check your internet connection or try again later.</p>
+                        <button onclick="initializeBazaarData()" class="mt-4 px-6 py-2 bg-white/5 hover:bg-white/10 rounded-full text-xs font-bold transition-all">Retry Connection</button>
+                    </div>
                 `;
             }
         }
 
-
-        /**
-         * Formats a number to a readable currency string.
-         * @param {number} num - The number to format.
-         * @returns {string} The formatted string.
-         */
         function formatSkyblockCoins(num) {
-            // Use Math.max(0, num) to prevent negative coin displays if there's a volume error
-            return new Intl.NumberFormat('en-US', {
-                style: 'currency',
-                currency: 'USD',
-                minimumFractionDigits: 2,
-                maximumFractionDigits: 2,
-            }).format(Math.max(0, num)).replace('$', '').trim();
+            return new Intl.NumberFormat('en-US', { minimumFractionDigits: 1, maximumFractionDigits: 1 }).format(Math.max(0, num));
         }
 
-        /**
-         * Formats a number to a readable integer string for large volumes.
-         * @param {number} num - The number to format.
-         * @returns {string} The formatted string.
-         */
         function formatVolume(num) {
-            return new Intl.NumberFormat('en-US').format(Math.max(0, num));
+            if (num >= 1000000) return (num / 1000000).toFixed(1) + 'M';
+            if (num >= 1000) return (num / 1000).toFixed(1) + 'K';
+            return num.toString();
         }
 
-        /**
-         * Fetches and displays Hypixel Bazaar data for a given item ID from the cached BAZAAR_DATA.
-         * @param {string} itemId - The item ID to fetch.
-         */
         async function fetchBazaarData(itemId) {
             itemId = (itemId || '').trim().toUpperCase();
-            if (!itemId) {
-                resultsContainer.innerHTML = '<div class="text-red-400 text-center p-4">Please enter a valid item ID.</div>';
-                return;
-            }
-
-            if (ITEM_IDS.length === 0) {
-                resultsContainer.innerHTML = '<div class="text-yellow-400 text-center p-4">Bazaar data is still loading. Please wait a moment.</div>';
-                return;
-            }
-
-            showLoading(`Looking up ${itemId.replace(/_/g, ' ')}...`);
+            if (!itemId) return;
+            showLoading(`Analyzing ${itemId}`);
             
-            // Check if the item exists in the fetched data
             const itemData = BAZAAR_DATA[itemId];
-            
             if (!itemData) {
-                resultsContainer.innerHTML = `
-                    <div class="text-yellow-400 text-center p-4">
-                        <strong class="font-bold">${itemId}</strong> is not a valid or active Bazaar item ID.
-                    </div>
-                `;
+                resultsContainer.innerHTML = `<div class="p-12 text-center text-slate-400">Item not found in current pool.</div>`;
                 return;
             }
 
-            const itemDisplayName = itemId.replace(/_/g, ' ');
             const quickStatus = itemData.quick_status || {};
-            
-            // Extract weekly volumes
-            const buyMovingWeek = quickStatus.buyMovingWeek || 0; // Volume of Player Sells (Buy Orders Filled)
-            const sellMovingWeek = quickStatus.sellMovingWeek || 0; // Volume of Player Buys (Sell Offers Filled)
-
-
-            // Structure the data for display, including the full summaries and new volumes
-            const dataToDisplay = {
-                product_id: itemId,
-                itemDisplayName,
-                buySummary: itemData.buy_summary, // Player selling to Bazaar (Sell Orders)
-                sellSummary: itemData.sell_summary, // Player buying from Bazaar (Buy Offers)
-                buyMovingWeek: buyMovingWeek, // Weekly volume for Buy Orders filled (Player Sells)
-                sellMovingWeek: sellMovingWeek // Weekly volume for Sell Offers filled (Player Buys)
-            };
-
-            displayResults(dataToDisplay);
+            displayResults({
+                id: itemId,
+                displayName: itemId.replace(/_/g, ' '),
+                buySummary: itemData.buy_summary || [],
+                sellSummary: itemData.sell_summary || [],
+                buyVol: quickStatus.buyMovingWeek || 0,
+                sellVol: quickStatus.sellMovingWeek || 0
+            });
         }
 
-        /**
-         * Helper function to render an order table (Buy Orders or Sell Offers).
-         * @param {Array} summary - The array of orders/offers.
-         * @param {boolean} isBuyOrder - True if rendering Buy Orders (Bazaar's Buy Summary / Player Sells), False for Sell Offers (Bazaar's Sell Summary / Player Buys).
-         * @param {number} volumeToDisplay - The specific 7-day volume to display.
-         * @param {number} marketMargin - The calculated instant flip margin (Sell Order Price - Buy Offer Price).
-         * @returns {string} The HTML string for the table.
-         */
-        function renderOrderTable(summary, isBuyOrder, volumeToDisplay, marketMargin) {
-            // isBuyOrder == true (Bazaar Buy Summary / Player Sells) -> RED (Sell Orders)
-            // isBuyOrder == false (Bazaar Sell Summary / Player Buys) -> GREEN (Buy Offers)
-            
-            const title = isBuyOrder ? 'Sell Orders' : 'Buy Offers'; 
-            
-            // --- COLOR REVERTED: RED for Sell Orders, GREEN for Buy Offers ---
-            const headerClass = isBuyOrder ? 'bg-red-700/50 text-red-200' : 'bg-green-700/50 text-green-200';
-            
-            const bestPrice = summary[0]?.pricePerUnit || 0;
-            
-            // Price is always yellow for visibility
-            const priceClass = 'text-yellow-300'; 
-            // Volume is always green for quantity
-            const volumeClass = 'text-green-400'; 
-            
-            // --- ICON REVERTED: Fire for Sell Orders, Ice for Buy Offers ---
-            const icon = isBuyOrder ? '🔥' : '🧊'; 
-            
-            // Format the specific volume for display
-            const formattedVolume = formatVolume(volumeToDisplay);
+        function renderOrderTable(summary, isSellOrder, volume, margin) {
+            const title = isSellOrder ? 'Sell Orders' : 'Buy Offers';
+            const accentColor = isSellOrder ? 'red' : 'emerald';
+            const icon = isSellOrder ? 
+                `<svg class="w-5 h-5 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 13l-5 5m0 0l-5-5m5 5V6"></path></svg>` : 
+                `<svg class="w-5 h-5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 11l5-5m0 0l5 5m-5-5v12"></path></svg>`;
 
-            // Determine the volume label based on the SWAPPED data coming in:
-            // If isBuyOrder=true (Sell Orders), it receives data.buyMovingWeek (Player Sells Volume). Label: "7 Day Buy Volume"
-            // If isBuyOrder=false (Buy Offers), it receives data.sellMovingWeek (Player Buys Volume). Label: "7 Day Sell Volume"
-            const volumeLabel = isBuyOrder ? '7 Day Buy Volume' : '7 Day Sell Volume';
-
-            let marginHtml = '';
+            const bestPrice = summary.length > 0 ? summary[0].pricePerUnit : 0;
             
-            if (isBuyOrder) {
-                // Only display margin in the Sell Orders card
-                const formattedMargin = formatSkyblockCoins(marketMargin);
-                // Color the margin based on whether it's profitable or not
-                const marginColorClass = marketMargin > 0 ? 'text-green-500' : (marketMargin < 0 ? 'text-red-500' : 'text-gray-400');
-                
-                marginHtml = `
-                    <p class="text-xs text-gray-400 mt-2 font-mono">
-                        Margin: <span class="${marginColorClass} font-bold">${formattedMargin}</span>
-                    </p>
-                `;
-            } else {
-                // Invisible spacer to ensure both cards align vertically.
-                // It occupies the same space as the margin line on the Sell Orders card.
-                marginHtml = `
-                    <p class="text-xs text-gray-400 mt-2 font-mono opacity-0 select-none pointer-events-none">
-                        &nbsp;
-                    </p>
-                `;
-            }
+            // Render all items without slicing
+            let tableHTML = summary.map((order, i) => `
+                <div class="flex justify-between items-center py-2 px-4 hover:bg-white/5 transition-colors rounded-lg group">
+                    <span class="font-mono text-sm text-slate-300 group-hover:text-white">${formatSkyblockCoins(order.pricePerUnit)}</span>
+                    <span class="text-xs font-bold text-slate-500 group-hover:text-slate-400">${formatVolume(order.amount)}</span>
+                </div>
+            `).join('');
 
-            let tableRows = '';
-
-            for (let i = 0; i < summary.length; i++) { // Loop runs for the entire summary length
-                const order = summary[i];
-                const price = formatSkyblockCoins(order.pricePerUnit);
-                // Volume formatted without cents
-                const volume = new Intl.NumberFormat('en-US').format(order.amount); 
-
-                tableRows += `
-                    <div class="grid grid-cols-2 p-2 ${i % 2 === 0 ? 'bg-gray-800' : 'bg-gray-700'} text-sm hover:bg-gray-600 transition duration-100">
-                        <!-- Price value uses yellow class, text is white for label/text -->
-                        <span class="text-white font-mono ${priceClass} font-semibold">${price}</span>
-                        <!-- Volume value uses green class, text is white for label/text -->
-                        <span class="text-right ${volumeClass} font-bold">${volume}</span>
-                    </div>
-                `;
-            }
-
-            if (summary.length === 0) {
-                 tableRows = `<div class="p-4 text-center text-gray-400 text-sm bg-gray-700">No active orders found in this summary.</div>`;
-            }
-            
             return `
-                <div class="flex flex-col overflow-hidden">
-                    <!-- Table Header -->
-                    <div class="p-3 ${headerClass} font-extrabold text-lg text-center flex items-center justify-center">
-                        <span class="mr-2 text-xl">${icon}</span> ${title}
-                    </div>
-                    
-                    <!-- Best Price Indicator (Flatter block) -->
-                    <div class="p-3 text-center bg-gray-600/70">
-                        <!-- Best Price Per Unit LABEL is white -->
-                        <p class="text-xs uppercase text-white font-medium mb-1">Best Price Per Unit</p>
-                        <!-- Price value uses yellow class -->
-                        <p class="text-3xl font-black ${priceClass} mb-1 drop-shadow-lg transition duration-200">
-                            ${formatSkyblockCoins(bestPrice)}
-                        </p>
-                        
-                        <!-- 7-Day Specific Volume Line (Label is swapped to match the data passed) -->
-                        <p class="text-xs text-gray-400 mt-2 font-mono">
-                            ${volumeLabel}: <span class="text-teal-300 font-bold">${formattedVolume}</span>
-                        </p>
-                        
-                        <!-- Margin Line (Only visible for Sell Orders, or spacer for Buy Offers) -->
-                        ${marginHtml}
+                <div class="glass-panel rounded-2xl overflow-hidden flex flex-col border border-white/5 transition-all hover:border-white/10">
+                    <div class="p-4 bg-white/5 border-b border-white/5 flex items-center justify-between">
+                        <div class="flex items-center space-x-2">
+                            ${icon}
+                            <span class="text-sm font-bold tracking-wider uppercase text-slate-200">${title}</span>
+                        </div>
+                        <span class="text-[10px] font-bold px-2 py-0.5 rounded bg-${accentColor}-500/10 text-${accentColor}-400">LIVE</span>
                     </div>
 
-                    <!-- Order List -->
-                    <div class="p-0">
-                        <!-- Header text (Price, Volume) is white -->
-                        <div class="grid grid-cols-2 text-white font-semibold uppercase text-xs px-2 py-1.5 bg-gray-700">
-                            <span>Price</span>
-                            <span class="text-right">Volume</span>
+                    <div class="p-6 flex flex-col">
+                        <div class="mb-6">
+                            <span class="text-[10px] uppercase font-bold text-slate-500 tracking-widest block mb-1">Optimal Price</span>
+                            <div class="text-4xl font-black text-white">${formatSkyblockCoins(bestPrice)}</div>
                         </div>
-                        ${tableRows}
+
+                        <div class="grid grid-cols-2 gap-4 mb-6">
+                            <div class="bg-white/5 p-3 rounded-xl">
+                                <span class="text-[10px] uppercase font-bold text-slate-500 block mb-1">7D Volume</span>
+                                <span class="text-sm font-bold text-slate-200">${formatVolume(volume)}</span>
+                            </div>
+                            <div class="bg-white/5 p-3 rounded-xl ${!isSellOrder ? 'opacity-0' : ''}">
+                                <span class="text-[10px] uppercase font-bold text-slate-500 block mb-1">Net Margin</span>
+                                <span class="text-sm font-bold ${margin > 0 ? 'text-emerald-400' : 'text-red-400'}">${formatSkyblockCoins(margin)}</span>
+                            </div>
+                        </div>
+
+                        <div class="flex-1">
+                            <div class="flex justify-between text-[10px] uppercase font-extrabold text-slate-500 px-4 mb-2">
+                                <span>Unit Price</span>
+                                <span>Batch Vol</span>
+                            </div>
+                            <!-- Added scrollable container with max height -->
+                            <div class="space-y-1 overflow-y-auto max-h-[300px] pr-2">
+                                ${tableHTML || '<div class="text-center py-4 text-slate-600 italic">No Active Book</div>'}
+                            </div>
+                        </div>
                     </div>
                 </div>
             `;
         }
 
-
-        /**
-         * Displays the fetched item data in a clean, card format with new aesthetics, including weekly volume.
-         * @param {object} data - The item data object containing pricing.
-         */
         function displayResults(data) {
-            
-            // Get the best prices for calculation (first entry in each summary)
-            const bestSellOrderPrice = data.buySummary[0]?.pricePerUnit || 0; // Price player receives when selling instantly
-            const bestBuyOfferPrice = data.sellSummary[0]?.pricePerUnit || 0; // Price player pays when buying instantly
-            
-            // Calculate the instant flip margin
-            const marketMargin = bestSellOrderPrice - bestBuyOfferPrice;
+            const bestBuy = data.buySummary.length > 0 ? data.buySummary[0].pricePerUnit : 0;
+            const bestSell = data.sellSummary.length > 0 ? data.sellSummary[0].pricePerUnit : 0;
+            const margin = bestBuy - bestSell;
 
             resultsContainer.innerHTML = `
-                <div class="w-full flex flex-col space-y-6 pt-4">
-                    <!-- Item Title and Subtitle for better visual hierarchy -->
-                    <div class="pb-3 border-b border-gray-600">
-                        <h3 class="text-3xl font-black text-center text-teal-300 tracking-wider">
-                            ✨ ${data.itemDisplayName}
-                        </h3>
-                        <p class="text-sm text-center text-gray-400 mt-1">Real-time Bazaar Order Book</p>
+                <div class="space-y-8 animate-fade-in">
+                    <div class="flex flex-col md:flex-row md:items-end justify-between border-b border-white/10 pb-6">
+                        <div>
+                            <span class="text-xs font-bold text-teal-400 uppercase tracking-[0.2em] mb-2 block">Item Identified</span>
+                            <h2 class="text-4xl font-black text-white tracking-tight">${data.displayName}</h2>
+                        </div>
+                        <div class="mt-4 md:mt-0">
+                            <span class="text-xs font-bold text-slate-500 uppercase tracking-widest block mb-1">Product ID</span>
+                            <span class="text-sm font-mono bg-white/5 px-3 py-1 rounded-lg text-slate-400 border border-white/5">${data.id}</span>
+                        </div>
                     </div>
 
-                    
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <!-- Buy Offers (GREEN, isBuyOrder=false) gets Player Buys Volume (sellMovingWeek). Pass margin for context. -->
-                        ${renderOrderTable(data.sellSummary, false, data.sellMovingWeek, marketMargin)} 
-
-                        <!-- Sell Orders (RED, isBuyOrder=true) gets Player Sells Volume (buyMovingWeek). Pass margin to display. -->
-                        ${renderOrderTable(data.buySummary, true, data.buyMovingWeek, marketMargin)}
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
+                        ${renderOrderTable(data.sellSummary, false, data.sellVol, margin)}
+                        ${renderOrderTable(data.buySummary, true, data.buyVol, margin)}
                     </div>
                 </div>
             `;
         }
 
+        function clearSearch() {
+            itemInput.value = '';
+            clearBtn.classList.add('hidden');
+            autocompleteList.innerHTML = '';
+            autocompleteList.classList.add('hidden');
+            showInitialState(ITEM_IDS.length);
+            itemInput.focus();
+        }
 
-        /**
-         * Handles input events for autocompletion and initiates debounced auto-fetch.
-         */
         function handleInput() {
             const input = itemInput.value.trim().toUpperCase();
-            
-            // Clear the previous debounce timer on every keystroke
-            clearTimeout(typingTimer); 
-
-            // Clear previous suggestions
+            clearBtn.classList.toggle('hidden', !input);
+            clearTimeout(typingTimer);
             autocompleteList.innerHTML = '';
             
             if (!input || ITEM_MAP.length === 0) {
@@ -390,43 +296,30 @@
                 return;
             }
 
-            // Filter ITEM_MAP: match if input INCLUDES any part of the ID OR any part of the Name.
-            // This enables searching by middle words like "GOLDEN" in "ENCHANTED GOLDEN CARROT".
-            const matches = ITEM_MAP.filter(item => {
-                const normalizedName = item.name.toUpperCase();
-                // Check if the raw ID contains the input OR the user-friendly name contains the input
-                return item.id.includes(input) || normalizedName.includes(input);
-            });
-
-            if (matches.length > 0) {
-                
-                // 1. Prioritize matches where the item name starts exactly with the input.
-                // 2. Sort remaining alphabetically by ID for consistent ordering.
-                matches.sort((a, b) => {
+            const matches = ITEM_MAP.filter(item => item.id.includes(input) || item.name.toUpperCase().includes(input))
+                .sort((a, b) => {
                     const aName = a.name.toUpperCase();
                     const bName = b.name.toUpperCase();
+                    if (aName.startsWith(input) && !bName.startsWith(input)) return -1;
+                    if (!aName.startsWith(input) && bName.startsWith(input)) return 1;
+                    return aName.localeCompare(bName);
+                })
+                .slice(0, 15);
 
-                    const aStarts = aName.startsWith(input);
-                    const bStarts = bName.startsWith(input);
-
-                    if (aStarts && !bStarts) return -1; // A comes first
-                    if (!aStarts && bStarts) return 1;  // B comes first
-
-                    // Fallback to alphabetical sort by ID (A-Z)
-                    return a.id.localeCompare(b.id);
-                });
-
-
-                // Limit to the top 10 results
-                matches.slice(0, 10).forEach(item => {
+            if (matches.length > 0) {
+                matches.forEach(item => {
                     const div = document.createElement('div');
-                    
-                    // Display ONLY the user-friendly name (e.g., CARROT ITEM)
-                    div.innerHTML = `<span class="font-sans font-medium">${item.name}</span>`;
-                    
-                    div.classList.add('p-3', 'cursor-pointer', 'hover:bg-gray-600', 'transition', 'duration-150', 'text-white');
-                    // Pass the raw ID back to selectAutocomplete
-                    div.onclick = () => selectAutocomplete(item.id); 
+                    // Block focus loss during the interaction
+                    div.onmousedown = (e) => {
+                        e.preventDefault(); 
+                    };
+                    // Use standard onclick for clean selection
+                    div.onclick = (e) => {
+                        e.stopPropagation();
+                        selectAutocomplete(item.id);
+                    };
+                    div.className = "p-4 cursor-pointer hover:bg-white/10 hover:text-teal-400 transition-all border-b border-white/5 last:border-0 font-bold text-slate-200 block w-full text-left relative z-[60]";
+                    div.innerText = item.name;
                     autocompleteList.appendChild(div);
                 });
                 autocompleteList.classList.remove('hidden');
@@ -434,36 +327,27 @@
                 autocompleteList.classList.add('hidden');
             }
 
-            // Set new timer for auto-fetch if typing stops and the input is a valid ID
             typingTimer = setTimeout(() => {
-                // Auto-fetch is triggered only when the input matches a full, exact ITEM ID.
                 if (ITEM_IDS.includes(input)) {
                     fetchBazaarData(input);
-                } else {
-                    // Also check if the input is an exact match for a name and find its ID
-                    const exactMatch = ITEM_MAP.find(item => item.name.toUpperCase() === input);
-                    if (exactMatch) {
-                        // If user types the full name and stops, fetch by the corresponding ID
-                        itemInput.value = exactMatch.id; // Update input to the ID before fetching
-                        fetchBazaarData(exactMatch.id);
-                    }
+                    autocompleteList.classList.add('hidden');
                 }
             }, typingDelay);
         }
 
-        /**
-         * Handles the selection of an item from the autocomplete list.
-         * Fills the input with the raw ID and immediately fetches the data.
-         * @param {string} itemId - The selected item ID (raw ID).
-         */
         function selectAutocomplete(itemId) {
-            itemInput.value = itemId; // We set the input value to the raw ID
+            itemInput.value = itemId;
+            clearBtn.classList.remove('hidden');
             autocompleteList.classList.add('hidden');
-            fetchBazaarData(itemId); 
-            itemInput.focus(); 
+            fetchBazaarData(itemId);
         }
+
+        document.addEventListener('click', (e) => {
+            if (!autocompleteList.contains(e.target) && e.target !== itemInput) {
+                autocompleteList.classList.add('hidden');
+            }
+        });
         
-        // Start initialization when the page loads
         window.onload = initializeBazaarData;
     </script>
 </body>
