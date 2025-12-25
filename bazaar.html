@@ -11,10 +11,10 @@
             font-family: 'Plus Jakarta Sans', sans-serif;
             background: radial-gradient(circle at top left, #0f172a, #020617);
         }
+        /* Adjusted panels: higher opacity and no background blur */
         .glass-panel {
-            background: rgba(30, 41, 59, 0.4);
-            backdrop-filter: blur(12px);
-            border: 1px solid rgba(255, 255, 255, 0.05);
+            background: rgba(15, 23, 42, 0.95);
+            border: 1px solid rgba(255, 255, 255, 0.1);
         }
         .search-glow:focus-within {
             box-shadow: 0 0 20px rgba(45, 212, 191, 0.15);
@@ -98,8 +98,6 @@
         let BAZAAR_DATA = {};
         let ITEM_MAP = [];
         let ITEM_IDS = []; 
-        let typingTimer;
-        const typingDelay = 400;
 
         const itemInput = document.getElementById('itemInput');
         const clearBtn = document.getElementById('clearBtn');
@@ -172,6 +170,7 @@
         async function fetchBazaarData(itemId) {
             itemId = (itemId || '').trim().toUpperCase();
             if (!itemId) return;
+
             showLoading(`Analyzing ${itemId}`);
             
             const itemData = BAZAAR_DATA[itemId];
@@ -200,7 +199,6 @@
 
             const bestPrice = summary.length > 0 ? summary[0].pricePerUnit : 0;
             
-            // Render all items without slicing
             let tableHTML = summary.map((order, i) => `
                 <div class="flex justify-between items-center py-2 px-4 hover:bg-white/5 transition-colors rounded-lg group">
                     <span class="font-mono text-sm text-slate-300 group-hover:text-white">${formatSkyblockCoins(order.pricePerUnit)}</span>
@@ -240,7 +238,6 @@
                                 <span>Unit Price</span>
                                 <span>Batch Vol</span>
                             </div>
-                            <!-- Added scrollable container with max height -->
                             <div class="space-y-1 overflow-y-auto max-h-[300px] pr-2">
                                 ${tableHTML || '<div class="text-center py-4 text-slate-600 italic">No Active Book</div>'}
                             </div>
@@ -288,7 +285,6 @@
         function handleInput() {
             const input = itemInput.value.trim().toUpperCase();
             clearBtn.classList.toggle('hidden', !input);
-            clearTimeout(typingTimer);
             autocompleteList.innerHTML = '';
             
             if (!input || ITEM_MAP.length === 0) {
@@ -309,14 +305,10 @@
             if (matches.length > 0) {
                 matches.forEach(item => {
                     const div = document.createElement('div');
-                    // Block focus loss during the interaction
-                    div.onmousedown = (e) => {
-                        e.preventDefault(); 
-                    };
-                    // Use standard onclick for clean selection
-                    div.onclick = (e) => {
-                        e.stopPropagation();
-                        selectAutocomplete(item.id);
+                    div.onmousedown = (e) => { e.preventDefault(); };
+                    div.onclick = (e) => { 
+                        e.stopPropagation(); 
+                        selectAutocomplete(item.id); 
                     };
                     div.className = "p-4 cursor-pointer hover:bg-white/10 hover:text-teal-400 transition-all border-b border-white/5 last:border-0 font-bold text-slate-200 block w-full text-left relative z-[60]";
                     div.innerText = item.name;
@@ -326,13 +318,6 @@
             } else {
                 autocompleteList.classList.add('hidden');
             }
-
-            typingTimer = setTimeout(() => {
-                if (ITEM_IDS.includes(input)) {
-                    fetchBazaarData(input);
-                    autocompleteList.classList.add('hidden');
-                }
-            }, typingDelay);
         }
 
         function selectAutocomplete(itemId) {
